@@ -780,6 +780,13 @@ details.help .hb li{margin:4px 0}
 .threshold-bar .field{display:flex;flex-direction:column;gap:3px}
 .threshold-bar label{font-size:13px;color:var(--muted)}
 .threshold-bar input[type=number]{font:inherit;font-size:15px;padding:6px 10px;border-radius:8px;border:1px solid var(--btnline);background:var(--btn);color:var(--btnink);width:90px}
+.syn td.r{background:var(--lvred)}.syn td.o{background:var(--lvorange)}
+.syn tr.primary td:first-child{box-shadow:inset 3px 0 0 #f59e0b}
+.syn .net{font-size:12px;color:var(--muted)}
+.syn-token{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.syn-token input{font:inherit;font-size:15px;padding:6px 10px;border-radius:8px;border:1px solid var(--btnline);background:var(--btn);color:var(--btnink);min-width:0;flex:1 1 220px;max-width:340px}
+.wx-pin{background:none;border:none}
+.wx-pin span{display:inline-block;padding:1px 5px;border-radius:9px;font:700 11px/1.4 system-ui,sans-serif;color:#0b1220;border:1px solid rgba(0,0,0,.35);white-space:nowrap}
 .threshold-bar .chk{flex-direction:row;align-items:center;gap:7px;font-size:14px}
 #thresholdStatus{font-size:14px;color:var(--muted);margin-top:8px}
 /* tables */
@@ -935,6 +942,13 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     <div id="timeline" class="tlwrap"><div class="note">Loading the hour-by-hour forecast…</div></div>
   </section>
 
+  <section class="card" id="synCard" data-collapse="open">
+    <h2 id="h2-syn">Hillside weather stations <span class="asof" id="asof-syn"></span><span class="src">Synoptic Data · RAWS, utility and volunteer stations within 6 mi</span></h2>
+    <div id="synOut" class="note">Loading hillside stations…</div>
+    <div id="synTokenBox" class="no-print"></div>
+    <p class="small">Station data courtesy of <a href="https://synopticdata.com/" target="_blank" rel="noopener">Synoptic Data PBC</a>.</p>
+  </section>
+
   <section class="card print-hide" id="mapCard" data-collapse="open">
     <h2 id="h2-map">Map — fire roads, risk areas, evacuation streets <span class="asof" id="asof-tiles"></span><span class="src">Tap anywhere for a spot forecast</span></h2>
     <div class="maptools no-print">
@@ -955,7 +969,8 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
       <i style="background:#facc15;border-radius:50%"></i>SOC ignition points ·
       <i style="background:#2563eb;border-radius:50%"></i>Fire stations ·
       <i style="background:#a855f7;border-radius:50%"></i>Cameras ·
-      <i style="background:#0f172a;border:2px solid #fff;border-radius:50%"></i>Wind at the watch point
+      <i style="background:#0f172a;border:2px solid #fff;border-radius:50%"></i>Wind at the watch point ·
+      <i style="background:#3fbf7f;border-radius:9px;width:22px"></i>Weather stations (humidity / gust)
     </div>
   </section>
 
@@ -1066,7 +1081,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
   <div class="disc">
     <p class="disc-lead"><b>For situational awareness only.</b> This dashboard is an informational tool. It gives guidelines and watch outs; it does not issue warnings, orders, deployments or assignments, and it is not an official product of the City of Beverly Hills, its Fire Department or any agency. Official watches and warnings come from the National Weather Service. Information may be delayed, incomplete or wrong; verify with official sources before acting. In an emergency, call 911.</p>
     <p>Readings come from public sources. The dials, the watch out level and the planning model are rules of thumb built on the City's published Red Flag triggers and a planning estimate based on SOC figures, not official forecasts or department guidance. Provided as is, without warranty of any kind.</p>
-    <p class="small">Data: NOAA/NWS, ALERTCalifornia, OpenStreetMap / Overpass, Esri, USGS, Windy. Fixed facts: 2026–2030 Standards of Cover (City of Beverly Hills).</p>
+    <p class="small">Data: NOAA/NWS, Synoptic Data PBC, ALERTCalifornia, OpenStreetMap / Overpass, Esri, USGS, Windy. Fixed facts: 2026–2030 Standards of Cover (City of Beverly Hills).</p>
     <p class="small">Hillside Fire Watch. Developed by PB, &copy; 2026.</p>
   </div>
 </footer>
@@ -1135,6 +1150,12 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
   ];
   var CAMERA_BASE = 'https://cameras.alertcalifornia.org/';
   var FIXED_STATIONS = ['KSMO', 'KBUR', 'KVNY'];
+  // Synoptic Data token. Leave empty to keep it out of the public file; each device can save its own in the
+  // Hillside weather stations card instead. A token saved on a device takes priority over this one.
+  var SYNOPTIC_TOKEN = '';
+  var SYN_RADIUS_MI = 6, SYN_MAX_AGE_MIN = 120;
+  // Synoptic network ids seen around the hillside; trusted = sited for fire weather or by a utility/agency
+  var SYN_NETS = { 1: ['NWS/FAA', true], 2: ['RAWS', true], 231: ['SCE', true], 65: ['CWOP volunteer', false], 66: ['CIMIS', false], 73: ['NWS co-op', false] };
   var WEATHER_DOWN = 'Weather feed unavailable right now — reopen or press Refresh.';
   var NO_NET = 'No internet connection detected.';
   var NO_ALERTS = 'No NWS alerts for this location.';
@@ -1447,7 +1468,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
 
   // ---------- data health + freshness (phase 3) ----------
   var FEEDS = [
-    ['forecast', 'NWS forecast'], ['alerts', 'NWS alerts'], ['obs', 'NWS observations'],
+    ['forecast', 'NWS forecast'], ['alerts', 'NWS alerts'], ['obs', 'NWS observations'], ['syn', 'Synoptic stations'],
     ['tiles', 'Map tiles'], ['roads', 'Fire roads'], ['windy', 'Windy'], ['cams', 'Cameras']
   ];
   var health = {};           // key -> { ok: bool, at: ms }
@@ -1468,6 +1489,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     var html = '';
     FEEDS.forEach(function (f) {
       var k = f[0], s = health[k] || {};
+      if (k === 'syn' && !synToken()) return;
       var ok = !!s.ok;
       var label = f[1];
       var when = k === 'roads' ? 'baked ' + BAKED_META.captured + (state.fireRoadsLive ? ' + live ' + fmtAt(s.at) : '') : (ok ? fmtAt(s.at) : (s.at ? 'last ' + fmtAt(s.at) : '—'));
@@ -1475,8 +1497,8 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     });
     h.innerHTML = html;
   }
-  var STAMP_IDS = { forecast: ['asof-hero', 'asof-tl', 'asof-days'], alerts: ['asof-alerts'], obs: ['asof-obs'], tiles: ['asof-tiles'], windy: ['asof-windy'], cams: ['asof-cams'] };
-  var STALE_H2 = { forecast: ['h2-hero', 'h2-tl', 'h2-days'], obs: ['h2-obs'], tiles: ['h2-map'], windy: ['h2-wind'], cams: ['h2-cams'] };
+  var STAMP_IDS = { forecast: ['asof-hero', 'asof-tl', 'asof-days'], alerts: ['asof-alerts'], obs: ['asof-obs'], syn: ['asof-syn'], tiles: ['asof-tiles'], windy: ['asof-windy'], cams: ['asof-cams'] };
+  var STALE_H2 = { forecast: ['h2-hero', 'h2-tl', 'h2-days'], obs: ['h2-obs'], syn: ['h2-syn'], tiles: ['h2-map'], windy: ['h2-wind'], cams: ['h2-cams'] };
   function stampAsOf(key) {
     (STAMP_IDS[key] || []).forEach(function (id) { var e = el(id); if (e) e.textContent = 'as of ' + fmtAt(lastOK[key]); });
     checkStale();
@@ -1807,6 +1829,13 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     (state.hours || []).forEach(function (h) { if (h[key] == null) return; if (!best || (hi ? h[key] > best[key] : h[key] < best[key])) best = h; });
     return best;
   }
+  function obsWhere(o) {
+    var b = [];
+    if (o.dist != null) b.push(o.dist.toFixed(1) + ' mi');
+    if (o.elev != null) b.push(o.elev.toLocaleString() + ' ft');
+    if (o.ageMin != null) b.push(fmtAge(o.ageMin));
+    return b.length ? ' <span class="muted">(' + esc(b.join(', ')) + ')</span>' : '';
+  }
   function paintWind() {
     var h = state.hours && state.hours[0], o = state.obsNearest;
     if (!h || h.wind == null) { paintGauge('windGauge', { title: 'Wind', value: null, min: 0, max: 50, noData: state.hoursFailed ? 'Forecast unavailable' : 'Waiting for the forecast' }); return; }
@@ -1815,7 +1844,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     var offshore = h.dir != null && (h.dir >= 337.5 || h.dir <= 112.5);
     var lines = [arrowHTML(h.dir) + ' ' + (comp ? 'From the ' + esc(comp) + ' (' + h.dir + '°)' + (offshore ? ' — <b>offshore</b>' : '') : 'direction not given')];
     lines.push('Gusts ' + (h.gust == null ? '—' : h.gust + ' mph') + (pg ? ' · peak ' + pg.gust + ' mph ' + esc(fmtDayHour(pg.t)) : ''));
-    if (o && (o.wind != null || o.gust != null)) lines.push('<span class="muted">Station check:</span> ' + esc(o.name || o.id) + ' ' + (o.wind == null ? '—' : o.wind + ' mph') + (o.gust != null ? ', gust ' + o.gust : '') + (o.dist != null ? ' <span class="muted">(' + o.dist.toFixed(0) + ' mi)</span>' : ''));
+    if (o && (o.wind != null || o.gust != null)) lines.push('<span class="muted">Station check:</span> ' + esc(o.name || o.id) + ' ' + (o.wind == null ? '—' : (o.dir != null ? esc(degToCompass(o.dir)) + ' ' : '') + o.wind + ' mph') + (o.gust != null ? ', gust ' + o.gust : '') + obsWhere(o));
     paintGauge('windGauge', { title: 'Wind', value: h.wind, min: 0, max: 50, gust: h.gust, peak: pk ? pk.wind : null,
       bands: [[0, EL_WIND, GC.ok], [EL_WIND, RF_WIND, GC.warn], [RF_WIND, 50, GC.bad]],
       ticks: [{ v: 0, label: '0' }, { v: EL_WIND, label: '15' }, { v: RF_WIND, label: '25' }, { v: 50, label: '50' }],
@@ -1830,7 +1859,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     var lines = [];
     if (lo) lines.push('Lowest ' + lo.rh + '% ' + esc(fmtDayHour(lo.t)));
     lines.push('Temperature ' + (h.temp == null ? '—' : h.temp + '°F') + (hiT ? ' · high ' + hiT.temp + '° ' + esc(fmtHour(hiT.t)) : ''));
-    if (o && o.rh != null) lines.push('<span class="muted">Station check:</span> ' + esc(o.name || o.id) + ' ' + o.rh + '%');
+    if (o && o.rh != null) lines.push('<span class="muted">Station check:</span> ' + esc(o.name || o.id) + ' ' + o.rh + '%' + (o.temp != null ? ', ' + o.temp + '°F' : '') + obsWhere(o));
     paintGauge('rhGauge', { title: 'Humidity', value: h.rh, min: 0, max: 60, peak: lo ? lo.rh : null,
       bands: [[0, RF_RH, GC.bad], [RF_RH, EL_RH, GC.warn], [EL_RH, 60, GC.ok]],
       ticks: [{ v: 0, label: '0' }, { v: RF_RH, label: '15' }, { v: EL_RH, label: '20' }, { v: 60, label: '60' }],
@@ -1913,7 +1942,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
       '<p>Four dials for the selected area. Each reads green, yellow or red against the City\'s own Red Flag triggers: <b>humidity 15% or lower, or sustained wind 25 mph or more</b>. The yellow band is "elevated": humidity 20% or lower with wind 15 mph or more, or gusts 35 mph or more.</p><ul>' +
       '<li><b>Watch out level</b> is one needle for how serious the fire weather is getting. It scores the hour-by-hour fire weather for the next 24 hours, the nearest station\'s actual reading and NWS alerts on one scale and follows the <b>worst</b> one, never an average: <b>Low</b>, <b>Elevated</b>, <b>High</b>. The lines under it name the watch out, when the first trigger hits, and the matching guideline from the planning model.</li>' +
       '<li>Gusts alone, or dry air with little wind, top out at Elevated. A Red Flag Warning puts the needle at High.</li>' +
-      '<li><b>Wind</b> and <b>Humidity</b> are the forecast for this area for the current hour, not a measurement. The small <b>tick</b> on the wind dial is the gust. The <b>triangle</b> on each dial is the worst value coming in the next 24 hours, so a needle in green with the triangle in red means tonight is the problem. The <b>Station check</b> line is a real reading from the nearest weather station, which may be several miles away and lower down.</li>' +
+      '<li><b>Wind</b> and <b>Humidity</b> are the forecast for this area for the current hour, not a measurement. The small <b>tick</b> on the wind dial is the gust. The <b>triangle</b> on each dial is the worst value coming in the next 24 hours, so a needle in green with the triangle in red means tonight is the problem. The <b>Station check</b> line is a real reading. With a Synoptic token it comes from the Beverly Hills RAWS (a fire-weather station at about 1,260 ft above Coldwater) or the nearest utility station; otherwise from the nearest NWS station, which is often an airport miles away and lower down. Its distance, elevation and age are shown in brackets.</li>' +
       '<li><b>Daylight</b> runs from sunrise to sunset. The last hour turns yellow. After dark, do not count on aircraft.</li>' +
       '<li><b>Chips</b> under the dials are quick all-clears. Tap one to jump to the details.</li>' +
       '<li>The City\'s third trigger, a burning index of 151 or more, is not in any free live feed, so it is not on this page.</li></ul>' },
@@ -1933,7 +1962,15 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     stationsCard: { t: 'Nearest fire stations', h:
       '<p>Straight-line distance and direction from the selected area to BHFD and nearby LAFD stations. The drive time is distance ÷ 20 mph, a rough stand-in for canyon roads, not real routing and not a first-due assignment. Confirm dispatch through CAD.</p>' },
     obsCard: { t: 'Observed weather', h:
-      '<p>Real measurements, not forecasts, from weather stations within 15 miles plus Santa Monica, Burbank and Van Nuys airports. There is no public station in Beverly Hills, so these are nearby readings at different elevations. Ridges above Trousdale can be windier on a Santa Ana day.</p>' },
+      '<p>Real measurements, not forecasts, from weather stations within 15 miles plus Santa Monica, Burbank and Van Nuys airports. These are mostly airports at lower elevations. For ridge and canyon readings, including the Beverly Hills RAWS, see Hillside weather stations.</p>' },
+    synCard: { t: 'Hillside weather stations', h:
+      '<p>Real measurements from stations within 6 miles of the selected area that reported in the last two hours, from Synoptic Data. Sorted by distance.</p><ul>' +
+      '<li><b>RAWS</b> are fire-weather stations run for wildland agencies. The Beverly Hills RAWS (BVRC1) sits about 1,260 ft up near Coldwater and Mulholland, the station the SOC names for Red Flag weather watch. It reports about once an hour.</li>' +
+      '<li><b>SCE</b> stations are Southern California Edison fire-weather stations on utility poles, every 10 minutes.</li>' +
+      '<li><b>CWOP volunteer</b> stations are backyard stations. Useful for a sense of the neighborhood, but they can sit in sheltered yards, so they never drive the dials.</li>' +
+      '<li>The highlighted row marks the station feeding the dials, the watch out level, the alert banner and Copy briefing: the RAWS when it is within 4 miles and reporting, otherwise the nearest RAWS or SCE station within 5 miles.</li>' +
+      '<li>Red and orange cells meet the City\'s Red Flag or elevated triggers on their own. On the map, each station shows humidity / gust, colored the same way; gray pins are volunteer stations.</li>' +
+      '<li>The Synoptic token is saved on this device only. Without one, this card stays empty and the page uses NWS stations as before.</li></ul>' },
     daysCard: { t: 'Next 7 days', h:
       '<p>The NWS 7-day forecast. A row is flagged <b>Santa Ana pattern</b> when the wind comes from the north, northeast or east with humidity 20% or lower, or when the forecast text says Santa Ana, offshore or red flag.</p>' },
     windCard: { t: 'Wind map', h: '<p>An animated wind map from Windy.com, centered on the selected area. Use its timeline to see how the wind changes over the next days. It loads only while this card is open.</p>' },
@@ -1985,7 +2022,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     var pg = peakAhead('gust', true), lr = peakAhead('rh', false);
     if (pg || lr) L.push('Next 24 h: ' + (pg ? 'peak gust ' + pg.gust + ' mph ' + fmtDayHour(pg.t) : '') + (pg && lr ? '; ' : '') + (lr ? 'lowest humidity ' + lr.rh + '% ' + fmtDayHour(lr.t) : ''));
     if (state.hours) L.push('Window: ' + el('tlSummary').textContent);
-    if (o) L.push('Observed (' + (o.name || o.id) + '): humidity ' + (o.rh == null ? '—' : o.rh + '%') + ', wind ' + (o.wind == null ? '—' : o.wind + ' mph') + (o.gust != null ? ' gust ' + o.gust : ''));
+    if (o) L.push('Observed (' + (o.name || o.id) + (o.src === 'syn' ? ', Synoptic' : '') + (o.ageMin != null ? ', ' + fmtAge(o.ageMin) : '') + '): humidity ' + (o.rh == null ? '—' : o.rh + '%') + ', wind ' + (o.wind == null ? '—' : (o.dir != null ? degToCompass(o.dir) + ' ' : '') + o.wind + ' mph') + (o.gust != null ? ' gust ' + o.gust : '') + (o.temp != null ? ', ' + o.temp + '°F' : ''));
     var s = sunTimes(new Date(), state.watch[0], state.watch[1]);
     if (s.sunset) L.push('Sunset ' + fmtClock(s.sunset) + ', civil dusk ' + (s.dusk ? fmtClock(s.dusk) : '—'));
     var note = (storeGet('tww.notes.' + state.area.key) || '').trim(); if (note) L.push('Notes: ' + note);
@@ -2136,7 +2173,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
       });
       if (!got) throw new Error('no station answered');
       feedOK('obs');
-      if (nearest) {
+      if (nearest && !(state.obsNearest && state.obsNearest.src === 'syn')) {
         var op = (nearest.o && nearest.o.properties) || {};
         function ov(k) { var x = op[k]; return (x && x.value != null) ? x.value : null; }
         var oRh = ov('relativeHumidity'); oRh = oRh == null ? null : Math.round(oRh);
@@ -2147,6 +2184,126 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
       }
       setHTML('obs', '<div class="table-wrap"><table><thead><tr><th>Station</th><th>Temp</th><th>Humidity</th><th>Wind</th><th>Gust</th><th>Observed</th></tr></thead><tbody>' + rows + '</tbody></table></div><div class="small">Sorted by distance from ' + esc(state.area.name) + '. A blank cell means that station did not report that value.</div>', '');
     }).catch(function (e) { quiet(e); feedFail('obs'); setNote('obs', offline() ? NO_NET : OBS_DOWN); });
+  }
+
+  // ---------- Synoptic Data hillside stations ----------
+  // One request per refresh: every station within SYN_RADIUS_MI of the watch point that reported in the last two hours.
+  // The best nearby station (RAWS first, then other trusted networks) becomes the "station check" used by the dials,
+  // the watch out level, the threshold banner and Copy briefing. Volunteer stations are shown but never drive the dials.
+  var synLayer = null, synRows = [];
+  function synToken() { return String(storeGet('tww.synToken') || SYNOPTIC_TOKEN || '').trim(); }
+  function synNet(id) { var n = SYN_NETS[id]; return n ? { name: n[0], trusted: n[1] } : { name: 'other network', trusted: false }; }
+  function titleCase(x) { x = String(x || ''); return x === x.toUpperCase() ? x.replace(/\b[A-Z]{4,}\b/g, function (w) { return w.charAt(0) + w.slice(1).toLowerCase(); }) : x; }
+  function synName(st, net) { var n = titleCase(st.NAME).replace(/\bU C L A\b/i, 'UCLA'); return net.name === 'RAWS' ? n + ' RAWS' : n; }
+  function synVal(ob, key) { var x = ob && ob[key + '_value_1']; return x && x.value != null && !isNaN(x.value) ? { v: +x.value, t: Date.parse(x.date_time) } : null; }
+  function parseSynoptic(j, lat, lon) {
+    if (!j || !j.SUMMARY || String(j.SUMMARY.RESPONSE_CODE) !== '1') throw new Error('Synoptic: ' + ((j && j.SUMMARY && j.SUMMARY.RESPONSE_MESSAGE) || 'no answer'));
+    var U = j.UNITS || {}, now = Date.now(), out = [], hidden = 0;
+    function spd(v) { if (v == null) return null; var k = /knot/i.test(U.wind_speed || ''); return Math.round(k ? v * 1.15078 : /m\/s/i.test(U.wind_speed || '') ? v * 2.23694 : v); }
+    function gst(v) { if (v == null) return null; var k = /knot/i.test(U.wind_gust || U.wind_speed || ''); return Math.round(k ? v * 1.15078 : /m\/s/i.test(U.wind_gust || '') ? v * 2.23694 : v); }
+    (j.STATION || []).forEach(function (st) {
+      var ob = st.OBSERVATIONS || {};
+      var T = synVal(ob, 'air_temp'), H = synVal(ob, 'relative_humidity'), W = synVal(ob, 'wind_speed'), G = synVal(ob, 'wind_gust'), D = synVal(ob, 'wind_direction');
+      var when = Math.max.apply(null, [T, H, W, G].map(function (x) { return x ? x.t : 0; }));
+      if (st.STATUS !== 'ACTIVE' || !when || now - when > SYN_MAX_AGE_MIN * 60000) { hidden++; return; }
+      function fresh(x) { return x && now - x.t <= SYN_MAX_AGE_MIN * 60000 ? x.v : null; }
+      var t = fresh(T), rh = fresh(H);
+      if (t != null && (t < -30 || t > 130)) t = null;          // out-of-range sensor, drop it
+      if (rh != null && (rh < 1 || rh > 100)) rh = null;
+      var la = +st.LATITUDE, lo = +st.LONGITUDE, net = synNet(+st.MNET_ID);
+      out.push({ src: 'syn', id: st.STID, name: synName(st, net), net: net.name, trusted: net.trusted, lat: la, lon: lo,
+        elev: st.ELEVATION != null ? Math.round(+st.ELEVATION) : null, dist: haversineMi(lat, lon, la, lo),
+        temp: t == null ? null : Math.round(t), rh: rh == null ? null : Math.round(rh), wind: spd(fresh(W)), gust: gst(fresh(G)), dir: fresh(D) == null ? null : Math.round(fresh(D)),
+        when: new Date(when).toISOString(), ageMin: Math.round((now - when) / 60000) });
+    });
+    out.sort(function (a, b) { return a.dist - b.dist; });
+    return { list: out, hidden: hidden };
+  }
+  function synPrimary(list) {
+    // RAWS within 4 mi wins; otherwise the nearest trusted station with humidity and wind; otherwise none
+    var c = list.filter(function (s) { return s.trusted && s.rh != null && s.wind != null && s.dist <= 5; });
+    var raws = c.filter(function (s) { return s.net === 'RAWS' && s.dist <= 4; });
+    return raws[0] || c[0] || null;
+  }
+  function synLevel(s) { var sc = hourScore({ wind: s.wind, gust: s.gust, rh: s.rh }); return sc == null ? '' : sc >= RDY.act ? 'r' : sc >= RDY.prepare ? 'o' : ''; }
+  function fmtAge(m) { return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : Math.floor(m / 60) + ' h ' + (m % 60) + ' min ago'; }
+  function synRender(res, primary) {
+    var rows = '';
+    res.list.forEach(function (s) {
+      var rc = s.rh != null && s.rh <= RF_RH ? 'r' : s.rh != null && s.rh <= EL_RH ? 'o' : '';
+      var wc = s.wind != null && s.wind >= RF_WIND ? 'r' : s.wind != null && s.wind >= EL_WIND ? 'o' : '';
+      var gc = s.gust != null && s.gust >= EL_GUST ? 'o' : '';
+      rows += '<tr' + (s === primary ? ' class="primary"' : '') + '><td><strong>' + esc(s.name) + '</strong>' + (s === primary ? ' <span class="badge b-muted">dials</span>' : '') +
+        '<div class="net">' + esc(s.id) + ' · ' + esc(s.net) + (s.elev != null ? ' · ' + esc(s.elev.toLocaleString()) + ' ft' : '') + ' · ' + esc(s.dist.toFixed(1)) + ' mi</div></td>' +
+        '<td>' + (s.temp == null ? '—' : esc(s.temp) + '°F') + '</td>' +
+        '<td class="' + rc + '">' + (s.rh == null ? '—' : esc(s.rh) + '%') + '</td>' +
+        '<td class="' + wc + '">' + (s.wind == null ? '—' : arrowHTML(s.dir) + ' ' + esc(s.wind) + ' mph' + (s.dir != null ? ' <span class="net">' + esc(degToCompass(s.dir)) + '</span>' : '')) + '</td>' +
+        '<td class="' + gc + '">' + (s.gust == null ? '—' : esc(s.gust) + ' mph') + '</td>' +
+        '<td>' + esc(fmtAge(s.ageMin)) + '</td></tr>';
+    });
+    if (!rows) { setNote('synOut', 'No hillside station within ' + SYN_RADIUS_MI + ' miles reported in the last two hours. The dials fall back to NWS stations.'); return; }
+    setHTML('synOut', '<div class="table-wrap syn"><table><thead><tr><th>Station</th><th>Temp</th><th>Humidity</th><th>Wind</th><th>Gust</th><th>Reported</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<div class="small">' + (primary ? 'The dials and watch out level use <b>' + esc(primary.name) + '</b>. ' : 'No RAWS or utility station close enough to drive the dials; they use NWS stations instead. ') +
+      'Red and orange cells meet the Red Flag or elevated triggers. ' + (res.hidden ? res.hidden + ' station' + (res.hidden > 1 ? 's' : '') + ' with nothing in the last two hours not shown.' : '') + '</div>', '');
+  }
+  function synMap(list) {
+    if (!map || !overlayGroups.wx) return;
+    overlayGroups.wx.clearLayers();
+    list.forEach(function (s) {
+      var lv = synLevel(s), bg = lv === 'r' ? GC.bad : lv === 'o' ? GC.warn : s.trusted ? GC.ok : '#9fb3c8';
+      var lbl = (s.rh == null ? '—' : s.rh + '%') + (s.gust != null ? ' / ' + s.gust : s.wind != null ? ' / ' + s.wind : '');
+      var icon = L.divIcon({ className: 'wx-pin', html: '<span style="background:' + bg + '">' + esc(lbl) + '</span>', iconSize: null, iconAnchor: [18, 10] });
+      L.marker([s.lat, s.lon], { icon: icon, keyboard: false }).bindPopup('<strong>' + esc(s.name) + '</strong><div class="small">' + esc(s.id) + ' · ' + esc(s.net) + (s.elev != null ? ' · ' + s.elev + ' ft' : '') + '</div>' +
+        'Humidity ' + (s.rh == null ? '—' : s.rh + '%') + ' · ' + (s.temp == null ? '—' : s.temp + '°F') + '<br>Wind ' + (s.wind == null ? '—' : esc(degToCompass(s.dir)) + ' ' + s.wind + ' mph') + (s.gust != null ? ', gust ' + s.gust : '') +
+        '<div class="small">' + esc(fmtAge(s.ageMin)) + ' · Synoptic Data</div>').addTo(overlayGroups.wx);
+    });
+  }
+  function synApply(j, run) {
+    if (run != null && run !== weatherRun) return;
+    var res = parseSynoptic(j, state.watch[0], state.watch[1]);
+    synRows = res.list;
+    var p = synPrimary(res.list);
+    synRender(res, p); synMap(res.list);
+    feedOK('syn');
+    if (p) {
+      state.obsNearest = { src: 'syn', id: p.id, name: p.name, dist: p.dist, rh: p.rh, gust: p.gust, wind: p.wind, dir: p.dir, temp: p.temp, when: p.when, ageMin: p.ageMin, elev: p.elev };
+      recordObsCond(p.rh, p.gust, p.when);
+      paintHero();
+    }
+  }
+  function renderSynTokenBox() {
+    var box = el('synTokenBox'); if (!box) return;
+    var has = !!synToken(), dev = !!String(storeGet('tww.synToken') || '').trim();
+    box.innerHTML = (has ? '<details><summary class="small">Synoptic token on this device</summary>' : '') +
+      '<div class="syn-token"><input id="synTokenIn" type="text" autocomplete="off" spellcheck="false" placeholder="Paste Synoptic token" aria-label="Synoptic token"><button id="synTokenSave" type="button">Save token</button>' +
+      (dev ? '<button id="synTokenClear" type="button">Remove token</button>' : '') + '</div>' +
+      '<p class="small">The token is saved on this device only, not in the page file.</p>' + (has ? '</details>' : '');
+    el('synTokenSave').addEventListener('click', function () {
+      var v = el('synTokenIn').value.trim(); if (!v) return;
+      storeSet('tww.synToken', v); renderSynTokenBox(); renderHealth(); loadSynoptic(weatherRun);
+    });
+    if (el('synTokenClear')) el('synTokenClear').addEventListener('click', function () {
+      storeSet('tww.synToken', ''); renderSynTokenBox(); renderHealth(); loadSynoptic(weatherRun);
+    });
+  }
+  function loadSynoptic(run) {
+    var tok = synToken();
+    if (!tok) {
+      synRows = []; if (overlayGroups.wx) overlayGroups.wx.clearLayers();
+      if (state.obsNearest && state.obsNearest.src === 'syn') state.obsNearest = null;
+      setNote('synOut', 'Add a Synoptic token below to see the Beverly Hills RAWS and other hillside stations. Until then the dials use NWS stations.');
+      return Promise.resolve();
+    }
+    var w = state.watch;
+    var url = 'https://api.synopticdata.com/v2/stations/latest?token=' + encodeURIComponent(tok) +
+      '&radius=' + w[0].toFixed(4) + ',' + w[1].toFixed(4) + ',' + SYN_RADIUS_MI + '&limit=20&status=active&within=' + SYN_MAX_AGE_MIN +
+      '&vars=air_temp,relative_humidity,wind_speed,wind_gust,wind_direction&units=english,speed%7Cmph&obtimezone=utc';
+    return fetchJSON(url).then(function (j) { synApply(j, run); }).catch(function (e) {
+      quiet(e); if (run != null && run !== weatherRun) return;
+      feedFail('syn');
+      var m = String(e && e.message || '');
+      setNote('synOut', offline() ? NO_NET : /token|auth|401|403/i.test(m) ? 'Synoptic did not accept the token on this device. Check it in the box below.' : 'Synoptic stations did not answer. The dials use NWS stations until the next refresh.');
+    });
   }
 
   // ---------- cameras ----------
@@ -2261,6 +2418,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     G.fireRoads = L.layerGroup();
     G.cameras = L.layerGroup();
     G.wind = L.layerGroup();
+    G.wx = L.layerGroup();
     var approx = function (mapNo, what) { return '<div class="small">approximate — traced from SOC Map ' + mapNo + ' and public street geometry (OpenStreetMap); ' + what + '</div>'; };
     L.polygon(OVERLAYS.city, { color: '#e2e8f0', weight: 2, dashArray: '6 6', fill: false }).bindPopup('<strong>Beverly Hills city boundary</strong><div class="small">public boundary geometry (OpenStreetMap)</div>').addTo(G.overlays);
     L.polygon(OVERLAYS.trousdale, { color: '#dc2626', weight: 2.5, fillColor: '#dc2626', fillOpacity: 0.16 }).bindPopup('<strong>Trousdale Estates</strong> — highest-risk area (Carla Ridge / Loma Vista Dr / N. Hillcrest Rd, up to Mulholland)' + approx('21', 'the city panhandle north of Doheny Rd')).addTo(G.overlays);
@@ -2287,12 +2445,13 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     G.soc = L.layerGroup([G.overlays, G.evac]);
     G.assets = L.layerGroup([G.stations, G.cameras]);
     overlayGroups = G;
-    G.soc.addTo(map); G.assets.addTo(map); G.fireRoads.addTo(map); G.wind.addTo(map);
+    G.soc.addTo(map); G.assets.addTo(map); G.fireRoads.addTo(map); G.wind.addTo(map); G.wx.addTo(map);
     var layersCtl = L.control.layers(baseLayers, {
       'Fire roads (baked 2026-09-07 + live refresh)': G.fireRoads,
       'Risk areas, evacuation streets, ignition points (SOC)': G.soc,
       'Fire stations and cameras': G.assets,
-      'Wind at the watch point': G.wind
+      'Wind at the watch point': G.wind,
+      'Weather stations (Synoptic)': G.wx
     }, { collapsed: window.innerWidth < 700 }).addTo(map);
     try {
       var lcClose = document.createElement('a');
@@ -2574,6 +2733,8 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     el('watchCoords').textContent = a.watch[0].toFixed(4) + ', ' + a.watch[1].toFixed(4);
     if (map) { map.setView(a.center, a.zoom); if (watchMarker) watchMarker.setLatLng(a.watch).setPopupContent('<strong>Watch point</strong><br>' + esc(a.name)); }
     if (windPin && overlayGroups.wind) { overlayGroups.wind.removeLayer(windPin); windPin = null; }
+    if (overlayGroups.wx) overlayGroups.wx.clearLayers();
+    setNote('synOut', 'Loading hillside stations…');
     renderAllLinkRows();
     loadNotes();
     renderNearestStations();
@@ -2598,6 +2759,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     setNote('days', 'Loading the 7-day forecast…');
     setNote('obs', 'Loading station readings…');
     el('zone').textContent = 'reading…';
+    var synDone = loadSynoptic(run);
     var a = fetchJSON('https://api.weather.gov/alerts/active?point=' + point, NWS_HEADERS)
       .then(function (j) { if (run !== weatherRun) return; renderAlerts(j); })
       .catch(function (e) { quiet(e); if (run === weatherRun) { feedFail('alerts'); weatherFail('alerts'); } });
@@ -2626,14 +2788,14 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
           renderTimeline(hrs); paintHero(); updateWindPin();
           feedOK('forecast');
         }).catch(function (e) { quiet(e); if (run === weatherRun) heroFail(); });
-        var obsDone = loadObservations(props.observationStations, run);
+        var obsDone = Promise.all([loadObservations(props.observationStations, run), synDone]);
         return fetchJSON(props.forecast, NWS_HEADERS)
           .then(function (dj) { return hourlyDone.then(function (hj) { if (run === weatherRun) renderDays(dj, hj); }); })
           .catch(function (e) { quiet(e); if (run === weatherRun) { weatherFail('days'); } })
           .then(function () { return Promise.all([obsDone, heroDone]); });
       })
       .catch(function (e) { quiet(e); if (run !== weatherRun) return; el('zone').textContent = 'unavailable'; feedFail('forecast'); feedFail('obs'); weatherFail('days'); setNote('obs', offline() ? NO_NET : OBS_DOWN); heroFail(); });
-    return Promise.all([a, p]);
+    return Promise.all([a, p, synDone]);
   }
   function heroFail() {
     state.hoursFailed = true;
@@ -2656,7 +2818,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     Promise.all([w]).then(function () {
       loading = false;
       // a feed that did not answer in THIS refresh goes gray (it keeps its last-good time)
-      ['forecast', 'alerts', 'obs'].forEach(function (k) { if (!health[k] || !health[k].at || health[k].at < refreshStart) feedFail(k); });
+      ['forecast', 'alerts', 'obs'].concat(synToken() ? ['syn'] : []).forEach(function (k) { if (!health[k] || !health[k].at || health[k].at < refreshStart) feedFail(k); });
       setNote('status', 'Feeds checked ' + fmtClock(new Date()) + ' · refreshes itself every 15 minutes', 'small muted');
     }, function () { loading = false; });
   }
@@ -2702,6 +2864,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
   var savedTheme = storeGet('tww.theme');
   applyTheme(savedTheme === 'light' ? 'light' : 'dark');
   loadThresholdSettings();
+  renderSynTokenBox();
   buildPicker();
   try { initMap(); } catch (e) { quiet(e); setHTML('map', '<div class="note" style="margin:12px">Map could not start in this browser — everything else on the page still works.</div>', ''); }
   initCollapsibles();
@@ -2738,6 +2901,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
   window.TWW.briefing = briefingText;
   // test hooks: feed made-up data (no network) to see each level render
   window.TWW.testHours = function (hrs) { state.hours = hrs; state.hoursSource = 'grid'; renderTimeline(hrs); paintHero(); updateWindPin(); };
+  window.TWW.testSynoptic = function (j) { synApply(j, null); return { rows: synRows.length, primary: state.obsNearest }; };
   window.TWW.testAlerts = function (evs) { state.alertEvents = evs; paintHero(); };
 })();
 
