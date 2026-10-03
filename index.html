@@ -939,7 +939,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
       <div id="readyGauge"></div>
       <div id="windGauge"></div>
       <div id="rhGauge"></div>
-      <div id="dayGauge"></div>
+      <div id="pigGauge"></div>
     </div>
     <div class="chips" id="heroChips"></div>
   </section>
@@ -950,12 +950,11 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     <div class="calc">
       <div><label for="cWind">Wind speed: <strong id="cWindV">10</strong> mph sustained</label><input id="cWind" type="range" min="0" max="70" value="10"></div>
       <div><label for="cRh">Humidity: <strong id="cRhV">30</strong>%</label><input id="cRh" type="range" min="1" max="100" value="30"></div>
-      <div><label for="cTime">Time of day</label><select id="cTime"><option value="day">Daytime</option><option value="night">Night</option></select></div>
       <div><label for="cSide">Ignition side</label><select id="cSide"><option value="north">North — Mulholland side, running into Trousdale</option><option value="city">In-city (for example Hillcrest Rd and Barrie Dr)</option></select></div>
     </div>
     <div class="bar no-print" style="margin:0 0 10px"><button id="calcLive" type="button">Use live forecast</button></div>
     <div id="calcOut" class="out"></div>
-    <p class="small">How it decides: humidity 15% or lower OR sustained wind 25 mph or more = the City's own Red Flag triggers, so the wind-driven model applies. Humidity 20% or lower with wind 15 mph or more = elevated, plan the wind-driven model and pre-position. Otherwise the ordinary-day first alarm applies. Sustained wind above 40 mph or night = do not count aircraft. These are guidelines, not assignments.</p>
+    <p class="small">How it decides: humidity 15% or lower OR sustained wind 25 mph or more = the City's own Red Flag triggers, so the wind-driven model applies. Humidity 20% or lower with wind 15 mph or more = elevated, plan the wind-driven model and pre-position. Otherwise the ordinary-day first alarm applies. Sustained wind above 40 mph = do not count aircraft. These are guidelines, not assignments.</p>
   </section>
 
   <section class="card" id="timelineCard" data-collapse="open">
@@ -965,11 +964,10 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
   </section>
 
   <section class="card" id="fdCard" data-collapse="open">
-    <h2 id="h2-fd">Fire danger — burning index, fuels, ignition, crew heat <span class="asof" id="asof-fd"></span><span class="src">USDA Forest Service FEMS · Synoptic fuel stick · estimates from the NWS forecast</span></h2>
+    <h2 id="h2-fd">Fire danger — burning index, fuels, crew heat <span class="asof" id="asof-fd"></span><span class="src">USDA Forest Service FEMS · Synoptic fuel stick · estimates from the NWS forecast</span></h2>
     <div id="fdBI" class="note">Loading the burning index…</div>
     <div class="fdgrid">
       <div class="fdbox" id="fdFuel"><h3>10-hour fuel (observed)</h3><div class="small">Loading…</div></div>
-      <div class="fdbox" id="fdIgn"><h3>Probability of ignition</h3><div class="small">Waiting for the forecast…</div></div>
       <div class="fdbox" id="fdHeat"><h3>Crew heat</h3><div class="small">Waiting for the forecast…</div></div>
     </div>
     <details class="fdset no-print"><summary>FEMS station for the burning index</summary>
@@ -1798,7 +1796,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     return best;
   }
   function renderFireLocal() {
-    var ig = el('fdIgn'), ht = el('fdHeat'); if (!ig || !ht) return;
+    var ig = el('fdIgn') || document.createElement('div'), ht = el('fdHeat'); if (!ht) return;
     var hrs = state.hours;
     if (!hrs || !hrs.length) { ig.innerHTML = '<h3>Probability of ignition</h3><div class="small">' + (state.hoursFailed ? 'Forecast unavailable.' : 'Waiting for the forecast…') + '</div>'; ht.innerHTML = '<h3>Crew heat</h3><div class="small">' + (state.hoursFailed ? 'Forecast unavailable.' : 'Waiting for the forecast…') + '</div>'; return; }
     var now = hourPIG(hrs[0]), pk = peakPIG(), low = null;
@@ -2119,19 +2117,28 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
       word: ['NORMAL', 'DRY', 'RED FLAG'][lv], cls: LEVEL_CLS[lv], valueText: h.rh + '%', lines: lines,
       sub: 'Low is the danger. Triangle = driest hour in 24 h.' });
   }
-  function paintDaylight() {
-    var now = new Date(), s = sunTimes(now, state.watch[0], state.watch[1]), m = moonPhase(now);
-    if (!s.sunrise || !s.sunset) { paintGauge('dayGauge', { title: 'Daylight', value: null, min: 0, max: 1, noData: 'Sun times unavailable' }); return; }
-    var rise = s.sunrise.getTime(), set = s.sunset.getTime(), t = now.getTime(), hr = 3600000;
-    var dark = t < rise || t > set, last = !dark && set - t <= hr;
-    var lines = [dark ? (t > set ? 'Sunset was ' + esc(fmtClock(s.sunset)) : 'Sunrise ' + esc(fmtClock(s.sunrise))) : 'Sunset <b>' + esc(fmtClock(s.sunset)) + '</b> · ' + relIn(set, t),
-      'Civil dusk ' + esc(s.dusk ? fmtClock(s.dusk) : '—') + ' · sunrise ' + esc(fmtClock(s.sunrise)),
-      'Moon: ' + esc(m.name.toLowerCase()) + ', ' + m.illum + '% lit'];
-    paintGauge('dayGauge', { title: 'Daylight', value: Math.min(set, Math.max(rise, t)), min: rise, max: set,
-      bands: [[rise, set - hr, GC.ok], [set - hr, set, GC.warn]],
-      ticks: [{ v: rise, label: fmtHour(rise).replace(' AM', 'a').replace(' PM', 'p') }, { v: set, label: fmtHour(set).replace(' AM', 'a').replace(' PM', 'p') }],
-      word: dark ? 'DARK' : last ? 'LAST HOUR' : 'DAYLIGHT', cls: dark ? 'bad' : last ? 'warn' : 'ok', lines: lines,
-      sub: 'Night: night-capable aircraft are limited; do not make the plan depend on them.' });
+  // probability of ignition dial. Bands follow common field practice: under 50% firebrands mostly fail;
+  // from 50% spot fires become likely; from 70% most firebrands that land in fine fuel start a fire (spotting is a major
+  // watch out); 90% and up nearly every one does.
+  var PIG_EL = 50, PIG_HI = 70, PIG_EX = 90;
+  function paintIgnition() {
+    var hrs = state.hours;
+    var now = hrs && hrs.length ? hourPIG(hrs[0]) : null;
+    if (!now) { paintGauge('pigGauge', { title: 'Probability of ignition', value: null, min: 0, max: 100, noData: state.hoursFailed ? 'Forecast unavailable' : 'Waiting for the forecast' }); return; }
+    var pk = peakPIG(), low = null, firstHi = null;
+    hrs.forEach(function (h) { var p = hourPIG(h); if (!p) return; if (!low || p.pig < low.pig) low = { pig: p.pig, t: h.t }; if (!firstHi && p.pig >= PIG_HI) firstHi = h.t; });
+    var lv = now.pig >= PIG_HI ? 2 : now.pig >= PIG_EL ? 1 : 0;
+    var word = now.pig >= PIG_EX ? 'EXTREME' : ['LOW', 'ELEVATED', 'HIGH'][lv];
+    var lines = [];
+    if (pk) lines.push('Peak ' + pk.pig + '% ' + esc(fmtDayHour(pk.t)) + (low && low.pig < pk.pig ? ' · lowest ' + low.pig + '% ' + esc(fmtDayHour(low.t)) : ''));
+    lines.push('Fine fuel moisture about ' + now.fm + '% (estimated)');
+    if (now.pig >= PIG_HI) lines.push('<b>Spotting watch out:</b> most embers landing in fine fuel will start a fire');
+    else if (firstHi) lines.push('Reaches ' + PIG_HI + '% ' + esc(fmtDayHour(firstHi)) + ' — <b>spotting watch out</b>');
+    paintGauge('pigGauge', { title: 'Probability of ignition', value: now.pig, min: 0, max: 100, peak: pk ? pk.pig : null,
+      bands: [[0, PIG_EL, GC.ok], [PIG_EL, PIG_HI, GC.warn], [PIG_HI, 100, GC.bad]],
+      ticks: [{ v: 0, label: '0' }, { v: PIG_EL, label: '50' }, { v: PIG_HI, label: '70' }, { v: 100, label: '100' }],
+      word: word, cls: LEVEL_CLS[lv], valueText: now.pig + '% now', lines: lines,
+      sub: 'Estimated from forecast temperature, humidity and cloud cover. Triangle = peak in 24 h. Not counted in the watch out level.' });
   }
   function chip(cls, label, card) { return '<button type="button" class="badge chip ' + cls + '" data-card="' + card + '">' + esc(label) + '</button>'; }
   function renderChips() {
@@ -2152,7 +2159,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     el('heroChips').innerHTML = out.join('');
   }
   function paintHero() {
-    paintReadiness(); paintWind(); paintHumidity(); paintDaylight(); renderChips();
+    paintReadiness(); paintWind(); paintHumidity(); paintIgnition(); renderChips();
     el('heroArea').textContent = state.area.name;
     syncCalcFromLive(false);
   }
@@ -2195,23 +2202,22 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
   // ---------- How to read this + Owner's Manual ----------
   var HELP = {
     heroCard: { t: 'Today at a glance', h:
-      '<p>Four dials for the selected area. Each reads green, yellow or red against the City\'s own Red Flag triggers: <b>humidity 15% or lower, or sustained wind 25 mph or more</b>. The yellow band is "elevated": humidity 20% or lower with wind 15 mph or more, or gusts 35 mph or more.</p><ul>' +
+      '<p>Four dials for the selected area. Wind and humidity read green, yellow or red against the City\'s own Red Flag triggers: <b>humidity 15% or lower, or sustained wind 25 mph or more</b>. The yellow band is "elevated": humidity 20% or lower with wind 15 mph or more, or gusts 35 mph or more.</p><ul>' +
       '<li><b>Watch out level</b> is one needle for how serious the fire weather is getting. It scores the hour-by-hour fire weather for the next 24 hours, the nearest station\'s actual reading and NWS alerts on one scale and follows the <b>worst</b> one, never an average: <b>Low</b>, <b>Elevated</b>, <b>High</b>. The lines under it name the watch out, when the first trigger hits, and the matching guideline from the planning model.</li>' +
       '<li>Gusts alone, or dry air with little wind, top out at Elevated. A Red Flag Warning puts the needle at High.</li>' +
       '<li><b>Wind</b> and <b>Humidity</b> are the forecast for this area for the current hour, not a measurement. The small <b>tick</b> on the wind dial is the gust. The <b>triangle</b> on each dial is the worst value coming in the next 24 hours, so a needle in green with the triangle in red means tonight is the problem. The <b>Station check</b> line is a real reading. With a Synoptic token it comes from the Beverly Hills RAWS (a fire-weather station at about 1,260 ft above Coldwater) or the nearest utility station; otherwise from the nearest NWS station, which is often an airport miles away and lower down. Its distance, elevation and age are shown in brackets.</li>' +
-      '<li><b>Daylight</b> runs from sunrise to sunset. The last hour turns yellow. After dark, do not count on aircraft.</li>' +
+      '<li><b>Probability of ignition</b> is the estimated chance that an ember landing in fine dead fuel starts a fire, worked out from the forecast temperature, humidity and cloud cover. Green under 50%; yellow from 50%, when spot fires become likely; red from 70%, when most embers that land will start a fire; 90% and up reads Extreme. It is a spotting watch out and is not counted in the watch out level, because humidity and temperature already drive it.</li>' +
       '<li><b>Chips</b> under the dials are quick all-clears. Tap one to jump to the details.</li>' +
       '<li>The City\'s third trigger, a burning index of 151 or more, is shown in the Fire danger card when a FEMS station is set. It is not counted in the watch out dial yet.</li></ul>' },
     deployCard: { t: 'Guidelines — planning model', h:
       '<p>The sliders pick a planning tier from a planning estimate built on the SOC\'s staffing and tasking figures. It is not an SOC or department figure, and it is a guideline, not an assignment. On open, and whenever the page refreshes, they are set from the <b>worst forecast hour in the next 24 hours</b> for the selected area, so the answer is what to plan for, not just what it is right now. Move a slider to try other conditions; press <b>Use live forecast</b> to go back.</p><ul>' +
       '<li><b>Tier 1</b>: the ordinary-day first alarm, about 75 people with LAFD auto-aid.</li><li><b>Tier 2</b>: the wind-driven Santa Ana model, about 40–50 engines and 250–320 fire personnel. It is a triage and patrol force, not one engine per house.</li>' +
-      '<li>Time of day is set to night when the worst hour falls after sunset. Ignition side stays where you put it.</li><li>Nothing is sent anywhere; this is local math.</li></ul>' },
+      '<li>Ignition side stays where you put it.</li><li>Nothing is sent anywhere; this is local math.</li></ul>' },
     fdCard: { t: 'Fire danger', h:
-      '<p>Four reads on how a fire would behave, none of them counted in the watch out dial.</p><ul>' +
+      '<p>Three reads on how a fire would behave, none of them counted in the watch out dial. Probability of ignition is on its own dial under Today at a glance.</p><ul>' +
       '<li><b>Burning index (BI)</b> is the National Fire Danger Rating System number for how hard a head fire would be to control. It combines spread (driven by wind) and energy release (driven by how dry all the fuels are). <b>BI ÷ 10 is roughly the flame length in feet</b> at the head of the fire. It comes from one FEMS station and fuel model, set at the bottom of the card. The colored scale uses LAFD\'s published staffing bands (Low 0–37, Moderate 38–47, High 48–110, Very High 111–161, Extreme 162+) and the tick marks the City\'s 151 trigger. FEMS runs the newer NFDRS version, so compare with LAFD\'s daily sheet loosely, not number for number. The small chart is the daily high for the last two weeks.</li>' +
       '<li><b>ERC</b> (energy release component) tracks the slow seasonal drying and ignores wind. A high ERC with light wind means the fuels are ready and the next wind event will hit hard.</li>' +
       '<li><b>10-hour fuel (observed)</b> is the fuel moisture stick at the nearest station that has one, often the Beverly Hills RAWS. Under 6% is critically dry.</li>' +
-      '<li><b>Probability of ignition</b> is estimated here from the forecast temperature, humidity and cloud cover, using the standard fine dead fuel moisture and ignition formulas. It is the chance a firebrand landing in fine fuel starts a fire, so it is a spotting and ember watch out. In a Santa Ana it sits near 80–100% for hours; it is more useful for seeing when moisture recovers overnight.</li>' +
       '<li><b>Crew heat</b> is the NWS heat index from the forecast. It assumes shade and light clothing; full PPE and hillside work add a lot more load. Caution from 80°, high from 90°.</li></ul>' },
     timelineCard: { t: 'Next 24 hours', h:
       '<p>Hour by hour for the selected area: wind direction, wind, gusts, humidity, temperature and an estimated probability of ignition, from the National Weather Service forecast grid. <b>Red</b> columns meet the City\'s Red Flag triggers; <b>orange</b> columns are elevated. The top line tells you when the bad window starts and ends. On a phone, swipe sideways. Arrows point the way the wind is blowing; the letters say where it comes from.</p>' },
@@ -2921,22 +2927,22 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
   };
   var FIRESCOPE_LABEL = 'This is a triage and patrol force — not one engine per structure (FIRESCOPE): doctrinal full defense at FIRESCOPE ratios would be 75–100 engines at the tight-spacing allowance and 188–250 at one engine per structure.';
   function renderCalc() {
-    var wind = Number(el('cWind').value), rh = Number(el('cRh').value), time = el('cTime').value, side = el('cSide').value;
+    var wind = Number(el('cWind').value), rh = Number(el('cRh').value), side = el('cSide').value;
     el('cWindV').textContent = wind; el('cRhV').textContent = rh;
     var redFlag = rh <= 15 || wind >= 25;
     var elevated = !redFlag && rh <= 20 && wind >= 15;
     var tier = redFlag ? TIER2 : elevated ? TIER2 : TIER1;
     var html = '<div class="tier">' + esc(tier.name) + '</div>';
-    html += '<div class="small">Conditions: ' + esc(wind) + ' mph sustained, ' + esc(rh) + '% humidity, ' + (time === 'night' ? 'night' : 'daytime') + ', ignition ' + (side === 'north' ? 'on the Mulholland side' : 'in-city') + ' → ' + (redFlag ? 'meets the City\'s Red Flag triggers (humidity 15% or lower, or wind 25 mph or more).' : elevated ? 'elevated (humidity 20% or lower with wind 15 mph or more) — plan the wind-driven model and pre-position.' : 'below the Red Flag triggers — ordinary-day first alarm.') + '</div>';
+    html += '<div class="small">Conditions: ' + esc(wind) + ' mph sustained, ' + esc(rh) + '% humidity, ignition ' + (side === 'north' ? 'on the Mulholland side' : 'in-city') + ' → ' + (redFlag ? 'meets the City\'s Red Flag triggers (humidity 15% or lower, or wind 25 mph or more).' : elevated ? 'elevated (humidity 20% or lower with wind 15 mph or more) — plan the wind-driven model and pre-position.' : 'below the Red Flag triggers — ordinary-day first alarm.') + '</div>';
     html += '<ul>' + tier.lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>';
     if (tier === TIER2) html += '<p><strong>' + esc(FIRESCOPE_LABEL) + '</strong></p>';
     html += '<p>SOC first alarm, always: 27 personnel (1 BC, 5 engines, 1 truck) — the whole on-duty force, so this is a mutual-aid fire from the first alarm (SOC printed p. 117 / PDF p. 127).</p>';
     if (side === 'north') html += '<p>Mulholland-side ignition: the 2021 assessment modeled the fire reaching Trousdale in under 15 minutes — pre-positioning, not response, is the only plan that works. On a forecast Santa Ana event the planning model suggests pre-positioning 2–3 strike teams in Trousdale and Coldwater rather than one engine.</p>';
     else html += '<p>In-city ignition (SOC Simulation 3, Hillcrest Rd and Barrie Dr, 97th-percentile summer weather — the SOC calls it the most representative of summer burning conditions): BHFD first alarm plus the LAFD BRUSH assignment on the same dispatch.</p>';
-    if (wind > 40 || time === 'night') html += '<p>Aircraft: ' + (wind > 40 ? 'sustained wind above 40 mph grounds most aircraft — assume zero aircraft in the structure math' : 'night — night-capable aircraft are limited; do not make the plan depend on them') + '.</p>';
+    if (wind > 40) html += '<p>Aircraft: sustained wind above 40 mph grounds most aircraft — assume zero aircraft in the structure math.</p>';
     el('calcOut').innerHTML = html;
   }
-  ['cWind', 'cRh', 'cTime', 'cSide'].forEach(function (id) { el(id).addEventListener('input', renderCalc); el(id).addEventListener('change', renderCalc); });
+  ['cWind', 'cRh', 'cSide'].forEach(function (id) { el(id).addEventListener('input', renderCalc); el(id).addEventListener('change', renderCalc); });
 
   // ---------- notes ----------
   function notesKey() { return 'tww.notes.' + state.area.key; }
@@ -2972,13 +2978,10 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     var h = worst.h;
     if (h.wind != null) el('cWind').value = Math.max(0, Math.min(70, h.wind));
     if (h.rh != null) el('cRh').value = Math.max(1, Math.min(100, h.rh));
-    var st = sunTimes(new Date(h.t), state.watch[0], state.watch[1]);
-    var night = st.sunrise && st.sunset ? (h.t < st.sunrise.getTime() || h.t > st.sunset.getTime()) : false;
-    el('cTime').value = night ? 'night' : 'day';
     el('calcSource').innerHTML = 'Set from the <b>worst forecast hour in the next 24 hours</b> for ' + esc(shortName(state.area)) + ': ' + esc(fmtDayHour(h.t)) + ' — wind ' + (h.wind == null ? '—' : h.wind + ' mph') + ', humidity ' + (h.rh == null ? '—' : h.rh + '%') + (h.gust != null ? ', gusts ' + h.gust + ' mph' : '') + '.';
     renderCalc();
   }
-  ['cWind', 'cRh', 'cTime'].forEach(function (id) {
+  ['cWind', 'cRh'].forEach(function (id) {
     el(id).addEventListener('input', function () { state.calcManual = true; el('calcSource').innerHTML = '<b>Set by hand.</b> Press Use live forecast to go back to the forecast.'; });
   });
   el('calcLive').addEventListener('click', function () { syncCalcFromLive(true); });
@@ -3148,7 +3151,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
   try { setTimeout(refreshFireRoadsLive, 3000); } catch (e) {}
   el('refresh').addEventListener('click', function () { state.fireRoadsTried = false; loadAll(); });
   try { setInterval(loadAll, 15 * 60 * 1000); } catch (e) {}
-  try { setInterval(paintDaylight, 60 * 1000); } catch (e) {}
+  try { setInterval(paintIgnition, 60 * 1000); } catch (e) {}
   el('updated').textContent = 'Updated ' + fmtClock(new Date());
 
   // test / automation hooks (read-only helpers; nothing here touches the network on its own)
