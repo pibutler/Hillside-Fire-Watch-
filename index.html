@@ -807,6 +807,28 @@ tr.flag{background:var(--flagbg)}
 .tl tr.lv td{font-size:12px;font-weight:700}.tl tr.hr td{font-weight:600}
 .tl .warr{font-size:18px}
 #tlSummary{margin:0 0 8px}
+/* fire danger */
+.fd-bi{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:flex-start;border:1px solid var(--line);border-left:6px solid var(--fdc,#5b6b80);border-radius:10px;padding:12px 16px;background:var(--panel2)}
+.fd-num{font-size:38px;font-weight:800;line-height:1}
+.fd-num small{display:block;font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.3px;margin-top:4px}
+.fd-word{font-size:19px;font-weight:800;margin:0 0 2px}
+.fd-main{flex:1 1 260px;min-width:0}
+.fd-scale{position:relative;height:12px;border-radius:6px;overflow:hidden;display:flex;margin:10px 0 4px}
+.fd-scale span{display:block;height:100%}
+.fd-mark{position:absolute;top:-3px;width:3px;height:18px;background:var(--ink);border-radius:2px}
+.fd-scale-wrap{position:relative;margin:8px 0 2px}
+.fd-ticks{position:relative;height:16px;font-size:12px;color:var(--muted)}
+.fd-ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.fd-ticks span:first-child{transform:none}.fd-ticks span:last-child{transform:translateX(-100%)}
+.fd-spark{width:100%;max-width:520px;height:64px;display:block;margin-top:6px}
+.fdgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:12px}
+.fdbox{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel2)}
+.fdbox h3{margin:0 0 4px;font-size:15px}
+.fdbox .v{font-size:22px;font-weight:800}
+.fdset{margin-top:12px}
+.fdset summary{cursor:pointer;color:var(--link);font-size:14px}
+.fdset .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.fdset input{font:inherit;font-size:14px;padding:6px 9px;border-radius:8px;border:1px solid var(--btnline);background:var(--btn);color:var(--btnink);width:9em}
 /* deployment */
 .calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 18px;align-items:end;margin:8px 0 12px}
 .calc label{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}
@@ -940,6 +962,22 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     <h2 id="h2-tl">Next 24 hours <span class="asof" id="asof-tl"></span><span class="src">NWS gridpoint forecast for the selected area</span></h2>
     <div id="tlSummary"></div>
     <div id="timeline" class="tlwrap"><div class="note">Loading the hour-by-hour forecast…</div></div>
+  </section>
+
+  <section class="card" id="fdCard" data-collapse="open">
+    <h2 id="h2-fd">Fire danger — burning index, fuels, ignition, crew heat <span class="asof" id="asof-fd"></span><span class="src">USDA Forest Service FEMS · Synoptic fuel stick · estimates from the NWS forecast</span></h2>
+    <div id="fdBI" class="note">Loading the burning index…</div>
+    <div class="fdgrid">
+      <div class="fdbox" id="fdFuel"><h3>10-hour fuel (observed)</h3><div class="small">Loading…</div></div>
+      <div class="fdbox" id="fdIgn"><h3>Probability of ignition</h3><div class="small">Waiting for the forecast…</div></div>
+      <div class="fdbox" id="fdHeat"><h3>Crew heat</h3><div class="small">Waiting for the forecast…</div></div>
+    </div>
+    <details class="fdset no-print"><summary>FEMS station for the burning index</summary>
+      <p class="small">The burning index comes from one fire-danger station in the Forest Service FEMS system. Enter its FEMS station ID (the number shown for the station on the <a href="https://fems.fs2c.usda.gov/" target="_blank" rel="noopener">FEMS map</a>) and the fuel model to read. Saved on this device only.</p>
+      <div class="row"><label for="femsId" class="small">Station ID</label><input id="femsId" inputmode="numeric" autocomplete="off" placeholder="e.g. 045447">
+        <label for="femsModel" class="small">Fuel model</label><select id="femsModel"><option value="X">X — brush / chaparral</option><option value="Y">Y — timber</option><option value="W">W — grass-shrub</option><option value="V">V — grass</option><option value="Z">Z — slash</option></select>
+        <button type="button" id="femsSave" class="primary">Save</button><button type="button" id="femsReset">Use default</button></div>
+    </details>
   </section>
 
   <section class="card" id="synCard" data-collapse="open">
@@ -1079,10 +1117,11 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
 </main>
 <footer>
   <div class="disc">
-    <p class="disc-lead"><b>For situational awareness only.</b> This dashboard is an informational tool. It gives guidelines and watch outs; it does not issue warnings, orders, deployments or assignments, and it is not an official product of the City of Beverly Hills, its Fire Department or any agency. Official watches and warnings come from the National Weather Service. Information may be delayed, incomplete or wrong; verify with official sources before acting. In an emergency, call 911.</p>
-    <p>Readings come from public sources. The dials, the watch out level and the planning model are rules of thumb built on the City's published Red Flag triggers and a planning estimate based on SOC figures, not official forecasts or department guidance. Provided as is, without warranty of any kind.</p>
-    <p class="small">Data: NOAA/NWS, Synoptic Data PBC, ALERTCalifornia, OpenStreetMap / Overpass, Esri, USGS, Windy. Fixed facts: 2026–2030 Standards of Cover (City of Beverly Hills).</p>
-    <p class="small">Hillside Fire Watch. Developed by PB, &copy; 2026.</p>
+    <p class="disc-lead"><b>Not an official document.</b> Hillside Fire Watch is an unofficial, informational tool for situational awareness only. It is not issued, reviewed, approved or endorsed by any city, fire department or government agency, and it does not state the policy or position of any of them. It gives guidelines and watch outs; it does not issue warnings, orders, deployments or assignments, and it is not a substitute for official forecasts, fire danger ratings or the judgment of the people on scene. Official watches and warnings come from the National Weather Service. Information may be delayed, incomplete or wrong; verify with official sources before acting. In an emergency, call 911.</p>
+    <p>Readings come from public sources. The dials, the watch out level, the fire danger figures and the planning model are rules of thumb and estimates, not official forecasts, ratings or department guidance. Provided as is, without warranty of any kind. Use at your own risk.</p>
+    <p class="small">Data: NOAA/NWS, USDA Forest Service FEMS, Synoptic Data PBC, ALERTCalifornia, OpenStreetMap / Overpass, Esri, USGS, Windy. Fixed facts: published Standards of Cover.</p>
+    <p class="small">Developed as part of independent research on hillside fire weather. Station data courtesy of Synoptic Data PBC.</p>
+    <p class="small">Hillside Fire Watch. Developed by PB.</p>
   </div>
 </footer>
 
@@ -1152,7 +1191,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
   var FIXED_STATIONS = ['KSMO', 'KBUR', 'KVNY'];
   // Synoptic Data token. Leave empty to keep it out of the public file; each device can save its own in the
   // Hillside weather stations card instead. A token saved on a device takes priority over this one.
-  var SYNOPTIC_TOKEN = '';
+  var SYNOPTIC_TOKEN = '38def14cc36049afa5e97f66fa3f2513';
   var SYN_RADIUS_MI = 6, SYN_MAX_AGE_MIN = 120;
   // Synoptic network ids seen around the hillside; trusted = sited for fire weather or by a utility/agency
   var SYN_NETS = { 1: ['NWS/FAA', true], 2: ['RAWS', true], 231: ['SCE', true], 65: ['CWOP volunteer', false], 66: ['CIMIS', false], 73: ['NWS co-op', false] };
@@ -1468,7 +1507,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
 
   // ---------- data health + freshness (phase 3) ----------
   var FEEDS = [
-    ['forecast', 'NWS forecast'], ['alerts', 'NWS alerts'], ['obs', 'NWS observations'], ['syn', 'Synoptic stations'],
+    ['forecast', 'NWS forecast'], ['alerts', 'NWS alerts'], ['obs', 'NWS observations'], ['syn', 'Synoptic stations'], ['fems', 'FEMS fire danger'],
     ['tiles', 'Map tiles'], ['roads', 'Fire roads'], ['windy', 'Windy'], ['cams', 'Cameras']
   ];
   var health = {};           // key -> { ok: bool, at: ms }
@@ -1490,6 +1529,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     FEEDS.forEach(function (f) {
       var k = f[0], s = health[k] || {};
       if (k === 'syn' && !synToken()) return;
+      if (k === 'fems' && !femsStation()) return;
       var ok = !!s.ok;
       var label = f[1];
       var when = k === 'roads' ? 'baked ' + BAKED_META.captured + (state.fireRoadsLive ? ' + live ' + fmtAt(s.at) : '') : (ok ? fmtAt(s.at) : (s.at ? 'last ' + fmtAt(s.at) : '—'));
@@ -1497,7 +1537,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     });
     h.innerHTML = html;
   }
-  var STAMP_IDS = { forecast: ['asof-hero', 'asof-tl', 'asof-days'], alerts: ['asof-alerts'], obs: ['asof-obs'], syn: ['asof-syn'], tiles: ['asof-tiles'], windy: ['asof-windy'], cams: ['asof-cams'] };
+  var STAMP_IDS = { forecast: ['asof-hero', 'asof-tl', 'asof-days'], alerts: ['asof-alerts'], obs: ['asof-obs'], syn: ['asof-syn'], fems: ['asof-fd'], tiles: ['asof-tiles'], windy: ['asof-windy'], cams: ['asof-cams'] };
   var STALE_H2 = { forecast: ['h2-hero', 'h2-tl', 'h2-days'], obs: ['h2-obs'], syn: ['h2-syn'], tiles: ['h2-map'], windy: ['h2-wind'], cams: ['h2-cams'] };
   function stampAsOf(key) {
     (STAMP_IDS[key] || []).forEach(function (id) { var e = el(id); if (e) e.textContent = 'as of ' + fmtAt(lastOK[key]); });
@@ -1601,12 +1641,12 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
   function rnd(v) { return v == null || isNaN(v) ? null : Math.round(v); }
   function hoursFromGrid(g) {
     var p = (g && g.properties) || {};
-    var ws = seriesFn(p.windSpeed), wg = seriesFn(p.windGust), wd = seriesFn(p.windDirection), rh = seriesFn(p.relativeHumidity), tp = seriesFn(p.temperature);
+    var ws = seriesFn(p.windSpeed), wg = seriesFn(p.windGust), wd = seriesFn(p.windDirection), rh = seriesFn(p.relativeHumidity), tp = seriesFn(p.temperature), sk = seriesFn(p.skyCover);
     var start = Math.floor(Date.now() / 3600000) * 3600000;
     var out = [], gotWind = 0;
     for (var i = 0; i < 24; i++) {
       var t = start + i * 3600000;
-      var h = { t: t, wind: rnd(ws(t)), gust: rnd(wg(t)), dir: rnd(wd(t)), rh: rnd(rh(t)), temp: rnd(tp(t)) };
+      var h = { t: t, wind: rnd(ws(t)), gust: rnd(wg(t)), dir: rnd(wd(t)), rh: rnd(rh(t)), temp: rnd(tp(t)), sky: rnd(sk(t)) };
       if (h.wind != null) gotWind++;
       out.push(h);
     }
@@ -1634,7 +1674,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
   var LEVEL_WORD = { r: 'Red Flag-level', o: 'Elevated', '': 'Normal' };
 
   function renderTimeline(hrs) {
-    var rows = { lv: '', hr: '', dir: '', wind: '', gust: '', rh: '', temp: '' };
+    var rows = { lv: '', hr: '', dir: '', wind: '', gust: '', rh: '', temp: '', pig: '' };
     var lastDay = '';
     hrs.forEach(function (h, i) {
       var lv = levelOf(h);
@@ -1650,6 +1690,8 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
       rows.gust += '<td' + c + '>' + (h.gust == null ? '—' : esc(h.gust)) + '</td>';
       rows.rh += '<td' + c + '>' + (h.rh == null ? '—' : esc(h.rh) + '%') + '</td>';
       rows.temp += '<td' + c + '>' + (h.temp == null ? '—' : esc(h.temp) + '°') + '</td>';
+      var pg = hourPIG(h);
+      rows.pig += '<td' + c + ' title="Estimated chance a firebrand in fine fuel starts a fire">' + (pg == null ? '—' : esc(pg.pig) + '%') + '</td>';
     });
     var html = '<table class="tl"><tbody>' +
       '<tr class="lv"><th scope="row">Level</th>' + rows.lv + '</tr>' +
@@ -1659,8 +1701,10 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
       '<tr><th scope="row">Gust mph</th>' + rows.gust + '</tr>' +
       '<tr><th scope="row">Humidity</th>' + rows.rh + '</tr>' +
       '<tr><th scope="row">Temp °F</th>' + rows.temp + '</tr>' +
+      '<tr><th scope="row" title="Probability of ignition, estimated">Ignition</th>' + rows.pig + '</tr>' +
       '</tbody></table>';
     setHTML('timeline', html, 'tlwrap');
+    renderFireLocal();
     el('tlSummary').innerHTML = timelineSummary(hrs) + (state.hoursSource === 'hourly' ? ' <span class="small">(Gridpoint data did not answer; this is the NWS hourly forecast, which often leaves gusts blank.)</span>' : '');
   }
   function runsOf(hrs, lv) {
@@ -1694,6 +1738,213 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     if (red.length) return '<strong>Red Flag-level conditions forecast ' + esc(span(red[0])) + (red.length > 1 ? ', and again later' : '') + '.</strong>' + esc(tail);
     if (orn.length) return '<strong>Elevated conditions forecast ' + esc(span(orn[0])) + (orn.length > 1 ? ', and again later' : '') + '.</strong> No Red Flag-level hours.' + esc(tail);
     return 'No Red Flag-level or elevated hours forecast in the next 24 hours.' + esc(tail);
+  }
+
+  // ---------- fire danger: burning index (FEMS), observed fuel stick (Synoptic), ignition and heat (estimated locally) ----------
+  var FEMS_STATION = '';            // bake a default FEMS station ID in here so every device works without setup
+  var FEMS_MODEL = 'X';             // NFDRS 2016 fuel model: X brush/chaparral, Y timber, W grass-shrub, V grass, Z slash
+  var FEMS_BASE = 'https://fems.fs2c.usda.gov/api/climatology/download-nfdr';
+  var CITY_BI = 151;                // the City's Red Flag burning index trigger
+  var BI_BANDS = [[0, 37, 'LOW', 'ok', '#3fbf7f'], [38, 47, 'MODERATE', 'ok', '#9bd36a'], [48, 110, 'HIGH', 'warn', '#f2b632'], [111, 161, 'VERY HIGH', 'bad', '#f07a3a'], [162, 300, 'EXTREME', 'bad', '#ef5350']];
+  var HEAT_CAUTION = 80, HEAT_HIGH = 90;
+  var fd = { bi: null, erc: null, t: null, station: '', model: '', stick: null };
+  function femsStation() { var v = String(storeGet('tww.femsStation') || '').trim(); return v || FEMS_STATION; }
+  function femsModel() { return String(storeGet('tww.femsModel') || '').trim() || FEMS_MODEL; }
+  function biBand(v) { for (var i = BI_BANDS.length - 1; i >= 0; i--) if (v >= BI_BANDS[i][0]) return BI_BANDS[i]; return BI_BANDS[0]; }
+
+  // fine dead fuel moisture and probability of ignition (NFDRS 1978 equations: Simard EMC, 1-h = 1.03 x EMC with the
+  // daytime fuel-level temperature/humidity correction by cloud cover, then Schroeder's heat-of-ignition probability)
+  function emc(T, H) {
+    if (H < 10) return 0.03229 + 0.281073 * H - 0.000578 * H * T;
+    if (H < 50) return 2.22749 + 0.160107 * H - 0.01478 * T;
+    return 21.0606 + 0.005565 * H * H - 0.00035 * H * T - 0.483199 * H;
+  }
+  function isDaylight(t) {
+    try { var s = sunTimes(new Date(t), state.watch[0], state.watch[1]); return !!(s.sunrise && s.sunset && t > s.sunrise.getTime() && t < s.sunset.getTime()); } catch (e) { return false; }
+  }
+  function hourPIG(h) {
+    if (!h || h.temp == null || h.rh == null) return null;
+    var T = h.temp, H = h.rh;
+    if (isDaylight(h.t)) {
+      var sky = h.sky == null ? 0 : h.sky;
+      var adj = sky <= 10 ? [25, 0.75] : sky <= 50 ? [19, 0.83] : sky <= 90 ? [12, 0.91] : [5, 1];
+      T += adj[0]; H *= adj[1];
+    }
+    var m = Math.max(1, 1.03 * emc(T, H));
+    var tc = (T - 32) * 5 / 9;
+    var q = 144.5 - 0.266 * tc + 0.00058 * tc * tc - 0.01 * tc * m + 18.54 * (1 - Math.exp(-0.151 * m)) + 6.4 * m;
+    var x = (400 - q) / 10;
+    var p = x <= 0 ? 0 : 0.000048 * Math.pow(x, 4.3) / 50;
+    return { pig: Math.max(0, Math.min(100, Math.round(p * 100 / 10) * 10)), fm: Math.round(m * 10) / 10 };
+  }
+  function peakPIG() {
+    var best = null;
+    (state.hours || []).forEach(function (h) { var p = hourPIG(h); if (p && (!best || p.pig > best.pig)) best = { pig: p.pig, fm: p.fm, t: h.t }; });
+    return best;
+  }
+  // NWS heat index (Rothfusz regression with the NWS adjustments)
+  function heatIndex(T, R) {
+    if (T == null || R == null) return null;
+    var hi = 0.5 * (T + 61 + (T - 68) * 1.2 + R * 0.094);
+    if ((hi + T) / 2 < 80) return Math.round(hi);
+    hi = -42.379 + 2.04901523 * T + 10.14333127 * R - 0.22475541 * T * R - 0.00683783 * T * T - 0.05481717 * R * R + 0.00122874 * T * T * R + 0.00085282 * T * R * R - 0.00000199 * T * T * R * R;
+    if (R < 13 && T >= 80 && T <= 112) hi -= ((13 - R) / 4) * Math.sqrt((17 - Math.abs(T - 95)) / 17);
+    else if (R > 85 && T >= 80 && T <= 87) hi += ((R - 85) / 10) * ((87 - T) / 5);
+    return Math.round(hi);
+  }
+  function peakHeat() {
+    var best = null;
+    (state.hours || []).forEach(function (h) { var v = heatIndex(h.temp, h.rh); if (v != null && (!best || v > best.hi)) best = { hi: v, t: h.t, temp: h.temp }; });
+    return best;
+  }
+  function renderFireLocal() {
+    var ig = el('fdIgn'), ht = el('fdHeat'); if (!ig || !ht) return;
+    var hrs = state.hours;
+    if (!hrs || !hrs.length) { ig.innerHTML = '<h3>Probability of ignition</h3><div class="small">' + (state.hoursFailed ? 'Forecast unavailable.' : 'Waiting for the forecast…') + '</div>'; ht.innerHTML = '<h3>Crew heat</h3><div class="small">' + (state.hoursFailed ? 'Forecast unavailable.' : 'Waiting for the forecast…') + '</div>'; return; }
+    var now = hourPIG(hrs[0]), pk = peakPIG(), low = null;
+    hrs.forEach(function (h) { var p = hourPIG(h); if (p && (!low || p.pig < low.pig)) low = { pig: p.pig, t: h.t }; });
+    ig.innerHTML = '<h3>Probability of ignition</h3>' + (now ? '<div class="v">' + now.pig + '%</div><div>Now, estimated · fine fuel moisture about ' + now.fm + '%</div>' : '<div class="small">No temperature or humidity in the forecast.</div>') +
+      (pk ? '<div>Peak ' + pk.pig + '% ' + esc(fmtDayHour(pk.t)) + (low && low.pig < pk.pig ? '; lowest ' + low.pig + '% ' + esc(fmtDayHour(low.t)) : '') + '</div>' : '') +
+      '<div class="small">Estimated from the forecast, not measured. Spotting and ember watch out.</div>';
+    var hx = peakHeat(), cur = heatIndex(hrs[0].temp, hrs[0].rh);
+    var word = !hx ? '' : hx.hi >= HEAT_HIGH ? 'HIGH' : hx.hi >= HEAT_CAUTION ? 'CAUTION' : 'LOW';
+    var col = !hx ? '' : hx.hi >= HEAT_HIGH ? 'var(--badc)' : hx.hi >= HEAT_CAUTION ? 'var(--warnc)' : 'var(--okc)';
+    ht.innerHTML = '<h3>Crew heat</h3>' + (hx ? '<div class="v" style="color:' + col + '">' + word + '</div><div>Heat index now ' + (cur == null ? '—' : cur + '°') + ' · peak ' + hx.hi + '° (' + hx.temp + '°F) ' + esc(fmtDayHour(hx.t)) + '</div>' +
+      (hx.hi >= HEAT_CAUTION ? '<div><b>Watch out:</b> rotate crews, water and shade, watch for heat illness. PPE and hillside work add load beyond the index.</div>' : '') : '<div class="small">No temperature in the forecast.</div>') +
+      '<div class="small">NWS heat index; assumes shade. Caution 80°, high 90°.</div>';
+  }
+
+  // FEMS returns CSV; a tiny parser that handles quoted cells
+  function parseCSVText(txt) {
+    var rows = [], row = [], cell = '', q = false;
+    for (var i = 0; i < txt.length; i++) {
+      var ch = txt[i];
+      if (q) { if (ch === '"') { if (txt[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === ',') { row.push(cell); cell = ''; }
+      else if (ch === '\n' || ch === '\r') { if (ch === '\r' && txt[i + 1] === '\n') i++; row.push(cell); cell = ''; if (row.length > 1 || row[0] !== '') rows.push(row); row = []; }
+      else cell += ch;
+    }
+    if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+    if (!rows.length) return [];
+    var head = rows[0].map(function (h) { return h.trim(); });
+    return rows.slice(1).map(function (r) { var o = {}; head.forEach(function (h, k) { o[h] = r[k] == null ? '' : String(r[k]).trim(); }); return o; });
+  }
+  function fetchText(url) {
+    if (NONET) return Promise.reject(new Error('offline (test)'));
+    return new Promise(function (resolve, reject) {
+      var ctrl = null; try { ctrl = new AbortController(); } catch (e) {}
+      var timer = setTimeout(function () { try { if (ctrl) ctrl.abort(); } catch (e) {} reject(new Error('timeout: ' + url)); }, 20000);
+      var init = { method: 'GET', cache: 'no-store' }; if (ctrl) init.signal = ctrl.signal;
+      fetch(url, init).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+        .then(function (t) { clearTimeout(timer); resolve(t); }, function (e) { clearTimeout(timer); reject(e); });
+    });
+  }
+  function femsUrl(id, model, endMs) {
+    var q = 'stationIds=' + encodeURIComponent(id) + '&startDate=' + encodeURIComponent(new Date(Date.now() - 13 * 864e5).toISOString().replace(/\.\d+Z$/, 'Z')) +
+      '&endDate=' + encodeURIComponent(new Date(endMs).toISOString().replace(/\.\d+Z$/, 'Z')) + '&dataFormat=csv&dataset=all';
+    return FEMS_BASE + '?' + q + (model ? '&fuelModels=' + encodeURIComponent(model) : '');
+  }
+  function num(v) { if (v == null || v === '') return null; var n = parseFloat(v); return isNaN(n) ? null : n; }
+  var femsRun = 0;
+  function loadFEMS() {
+    var run = ++femsRun, id = femsStation(), model = femsModel(), box = el('fdBI');
+    if (!box) return;
+    var femsLink = '<a href="https://fems.fs2c.usda.gov/" target="_blank" rel="noopener">FEMS fire danger map</a>';
+    if (!id) {
+      fd.bi = null; renderChips();
+      box.className = 'note';
+      box.innerHTML = '<b>Burning index:</b> no FEMS station set yet. Open <b>FEMS station for the burning index</b> below and enter the station\'s ID, or check the ' + femsLink + '. City trigger: BI ' + CITY_BI + ' or more.';
+      return;
+    }
+    box.className = 'note'; box.textContent = 'Loading the burning index from FEMS…';
+    var later = Date.now() + 3 * 864e5;
+    var tryGet = function (m, end) { return fetchText(femsUrl(id, m, end)).then(function (t) { return parseCSVText(t).filter(function (r) { return r.stationId || r.burningIndex; }); }); };
+    tryGet(model, later)
+      .catch(function () { return tryGet(model, Date.now()); })
+      .then(function (rows) { return rows.length ? rows : tryGet('', Date.now()); })
+      .then(function (rows) {
+        if (run !== femsRun) return;
+        rows = rows.filter(function (r) { return num(r.burningIndex) != null && !isNaN(Date.parse(r.observationTime)); });
+        var models = {}; rows.forEach(function (r) { models[r.fuelModelType] = (models[r.fuelModelType] || 0) + 1; });
+        var useModel = models[model] ? model : Object.keys(models).sort(function (a, b) { return models[b] - models[a]; })[0];
+        rows = rows.filter(function (r) { return !useModel || r.fuelModelType === useModel; })
+          .map(function (r) { r._t = Date.parse(r.observationTime); return r; }).sort(function (a, b) { return a._t - b._t; });
+        if (!rows.length) throw new Error('no rows');
+        renderBI(rows, id, useModel || model);
+        feedOK('fems');
+      })
+      .catch(function (e) {
+        quiet(e); if (run !== femsRun) return;
+        fd.bi = null; renderChips(); feedFail('fems');
+        box.className = 'note';
+        box.innerHTML = '<b>Burning index:</b> FEMS did not answer for station ' + esc(id) + (offline() ? ' (no internet).' : '. The station ID may be wrong, or FEMS may not allow this page to read it directly.') + ' Check the ' + femsLink + '. City trigger: BI ' + CITY_BI + ' or more.';
+      });
+  }
+  function renderBI(rows, id, model) {
+    var now = Date.now(), past = rows.filter(function (r) { return r._t <= now + 1800000; }), fut = rows.filter(function (r) { return r._t > now + 1800000; });
+    var last = past.length ? past[past.length - 1] : rows[0];
+    var v = num(last.burningIndex), b = biBand(v);
+    fd.bi = { v: v, word: b[2], cls: b[3] }; fd.erc = num(last.energyReleaseComponent); fd.t = last._t; fd.station = (last.stationName ? last.stationName + ' ' : '') + id; fd.model = model;
+    // daily highs for the sparkline (observed, then forecast)
+    var days = {}, order = [];
+    rows.forEach(function (r) { var d = new Date(r._t); var k = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); if (!(k in days)) { days[k] = { v: -1, t: r._t, f: r._t > now + 1800000 }; order.push(k); } var x = num(r.burningIndex); if (x > days[k].v) days[k].v = x; });
+    var pts = order.map(function (k) { return days[k]; });
+    var maxV = Math.max(CITY_BI + 20, Math.max.apply(null, pts.map(function (p) { return p.v; })) + 10);
+    var W = 520, H = 64, n = pts.length;
+    var xy = function (i, val) { return [(n < 2 ? W / 2 : 6 + i * (W - 12) / (n - 1)).toFixed(1), (H - 6 - (val / maxV) * (H - 12)).toFixed(1)]; };
+    var obsPath = '', fcPath = '';
+    pts.forEach(function (p, i) { var c = xy(i, p.v); if (!p.f) obsPath += (obsPath ? 'L' : 'M') + c[0] + ' ' + c[1]; else { if (!fcPath) { var j = Math.max(0, i - 1); var c0 = xy(j, pts[j].v); fcPath = 'M' + c0[0] + ' ' + c0[1]; } fcPath += 'L' + c[0] + ' ' + c[1]; } });
+    var ty = xy(0, CITY_BI)[1];
+    var spark = '<svg class="fd-spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="Daily high burning index, last two weeks">' +
+      '<line x1="0" x2="' + W + '" y1="' + ty + '" y2="' + ty + '" stroke="#ef5350" stroke-dasharray="4 4" stroke-width="1"/>' +
+      '<path d="' + obsPath + '" fill="none" stroke="var(--ink)" stroke-width="2" vector-effect="non-scaling-stroke"/>' +
+      (fcPath ? '<path d="' + fcPath + '" fill="none" stroke="var(--ink)" stroke-width="2" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/>' : '') + '</svg>';
+    var fmax = null; fut.forEach(function (r) { var x = num(r.burningIndex); if (fmax == null || x > fmax.v) fmax = { v: x, t: r._t }; });
+    // colored scale, 0 to 250
+    var top = 250, scale = BI_BANDS.map(function (bb) { var a = bb[0], z = Math.min(bb[1] + 1, top); return '<span style="width:' + ((z - a) / top * 100).toFixed(2) + '%;background:' + bb[4] + '"></span>'; }).join('');
+    var mark = Math.min(v, top) / top * 100, cmark = CITY_BI / top * 100;
+    var fmv = function (k) { var x = num(last[k]); return x == null ? '—' : (Math.round(x * 10) / 10) + '%'; };
+    var box = el('fdBI');
+    box.className = 'fd-bi'; box.style.setProperty('--fdc', b[4]);
+    box.innerHTML = '<div class="fd-num">' + Math.round(v) + '<small>BURNING INDEX</small></div>' +
+      '<div class="fd-main"><div class="fd-word" style="color:' + b[4] + '">' + esc(b[2]) + '</div>' +
+      '<div>About <b>' + (v / 10).toFixed(0) + ' ft flame length</b> at the head of a fire. ' + (v >= CITY_BI ? '<b>At or above the City\'s ' + CITY_BI + ' trigger.</b>' : 'City trigger: ' + CITY_BI + '.') + '</div>' +
+      '<div class="fd-scale-wrap"><div class="fd-scale">' + scale + '</div><div class="fd-mark" style="left:calc(' + mark.toFixed(1) + '% - 1px)" title="Now"></div><div class="fd-mark" style="left:calc(' + cmark.toFixed(1) + '% - 1px);background:#ef5350;width:2px" title="City trigger ' + CITY_BI + '"></div></div>' +
+      '<div class="fd-ticks">' + [[0, '0'], [48, '48'], [111, '111'], [CITY_BI, CITY_BI + ' City'], [top, top + '']].map(function (k) { return '<span style="left:' + (k[0] / top * 100).toFixed(1) + '%' + (k[0] === CITY_BI ? ';color:#ef5350' : '') + '">' + k[1] + '</span>'; }).join('') + '</div>' +
+      '<div style="margin-top:8px">ERC ' + (fd.erc == null ? '—' : Math.round(fd.erc)) + ' · spread ' + (num(last.spreadComponent) == null ? '—' : Math.round(num(last.spreadComponent))) + ' · ignition component ' + (num(last.ignitionComponent) == null ? '—' : Math.round(num(last.ignitionComponent))) + '</div>' +
+      '<div>Fuel moisture: 1-hr ' + fmv('oneHR_TL_FuelMoisture') + ', 10-hr ' + fmv('tenHR_TL_FuelMoisture') + ', 100-hr ' + fmv('hundredHR_TL_FuelMoisture') + ', 1000-hr ' + fmv('thousandHR_TL_FuelMoisture') + '</div>' +
+      (fmax ? '<div><b>FEMS forecast:</b> peak BI ' + Math.round(fmax.v) + ' ' + esc(fmtDayHour(fmax.t)) + '</div>' : '') +
+      spark + '<div class="small">Daily high, last two weeks' + (fcPath ? ' (dashed = forecast)' : '') + '. Red dashed line = ' + CITY_BI + '.</div>' +
+      '<div class="small">FEMS station ' + esc(fd.station) + ', fuel model ' + esc(model) + ', ' + esc(fmtDayHour(last._t)) + '. NFDRS 2016, compare with LAFD\'s sheet loosely.</div></div>';
+    renderChips();
+  }
+  // observed 10-hour fuel stick from the nearest Synoptic station that reports one
+  function loadFuelStick(run) {
+    var bx = el('fdFuel'); if (!bx) return;
+    var tok = synToken();
+    if (!tok) { bx.innerHTML = '<h3>10-hour fuel (observed)</h3><div class="small">Needs the Synoptic token (Hillside weather stations card).</div>'; return; }
+    var w = state.watch;
+    var url = 'https://api.synopticdata.com/v2/stations/latest?token=' + encodeURIComponent(tok) + '&radius=' + w[0].toFixed(4) + ',' + w[1].toFixed(4) + ',15&limit=5&status=active&within=360&vars=fuel_moisture&obtimezone=utc';
+    fetchJSON(url).then(function (j) {
+      if (run !== weatherRun) return;
+      var best = null;
+      ((j && j.STATION) || []).forEach(function (st) {
+        var o = st.OBSERVATIONS && st.OBSERVATIONS.fuel_moisture_value_1; if (!o || o.value == null) return;
+        var d = haversineMi(w[0], w[1], +st.LATITUDE, +st.LONGITUDE);
+        if (!best || d < best.d) best = { v: Math.round(o.value * 10) / 10, name: st.NAME || st.STID, id: st.STID, d: d, t: Date.parse(o.date_time) };
+      });
+      fd.stick = best;
+      if (!best) { bx.innerHTML = '<h3>10-hour fuel (observed)</h3><div class="small">No fuel moisture stick reporting within 15 miles in the last 6 hours.</div>'; return; }
+      var word = best.v < 6 ? ['CRITICAL', 'var(--badc)'] : best.v < 9 ? ['DRY', 'var(--warnc)'] : ['MOIST', 'var(--okc)'];
+      bx.innerHTML = '<h3>10-hour fuel (observed)</h3><div class="v" style="color:' + word[1] + '">' + best.v + '% · ' + word[0] + '</div><div>' + esc(best.name) + ' (' + esc(best.id) + '), ' + best.d.toFixed(1) + ' mi' + (isNaN(best.t) ? '' : ', ' + esc(fmtClock(new Date(best.t)))) + '</div><div class="small">Fuel moisture stick. Under 6% is critically dry.</div>';
+    }).catch(function (e) { quiet(e); if (run === weatherRun) bx.innerHTML = '<h3>10-hour fuel (observed)</h3><div class="small">Synoptic did not answer. Tries again on the next refresh.</div>'; });
+  }
+  function initFEMSSettings() {
+    var idIn = el('femsId'), mSel = el('femsModel'); if (!idIn) return;
+    idIn.value = femsStation(); mSel.value = femsModel();
+    el('femsSave').addEventListener('click', function () { storeSet('tww.femsStation', idIn.value.replace(/[^0-9A-Za-z]/g, '')); storeSet('tww.femsModel', mSel.value); loadFEMS(); });
+    el('femsReset').addEventListener('click', function () { storeSet('tww.femsStation', ''); storeSet('tww.femsModel', ''); idIn.value = femsStation(); mSel.value = femsModel(); loadFEMS(); });
   }
 
   // ---------- Today at a glance: gauges (drawing adapted from Redondo Beach Storm Track) ----------
@@ -1859,6 +2110,8 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     var lines = [];
     if (lo) lines.push('Lowest ' + lo.rh + '% ' + esc(fmtDayHour(lo.t)));
     lines.push('Temperature ' + (h.temp == null ? '—' : h.temp + '°F') + (hiT ? ' · high ' + hiT.temp + '° ' + esc(fmtHour(hiT.t)) : ''));
+    var hx = peakHeat();
+    if (hx && hx.hi >= HEAT_CAUTION) lines.push('Heat index peaks ' + hx.hi + '° ' + esc(fmtHour(hx.t)) + ' — <b>crew heat watch out</b>');
     if (o && o.rh != null) lines.push('<span class="muted">Station check:</span> ' + esc(o.name || o.id) + ' ' + o.rh + '%' + (o.temp != null ? ', ' + o.temp + '°F' : '') + obsWhere(o));
     paintGauge('rhGauge', { title: 'Humidity', value: h.rh, min: 0, max: 60, peak: lo ? lo.rh : null,
       bands: [[0, RF_RH, GC.bad], [RF_RH, EL_RH, GC.warn], [EL_RH, 60, GC.ok]],
@@ -1891,6 +2144,9 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
       var wind = has(/high wind|wind advisory/i);
       if (wind) out.push(chip('b-warn', wind.event, 'alerts-sec'));
     }
+    var hx = peakHeat();
+    if (hx) out.push(hx.hi >= HEAT_HIGH ? chip('b-bad', 'Crew heat · high (index ' + hx.hi + '°)', 'fdCard') : hx.hi >= HEAT_CAUTION ? chip('b-warn', 'Crew heat · caution (index ' + hx.hi + '°)', 'fdCard') : chip('b-ok', 'Crew heat · low', 'fdCard'));
+    if (fd.bi) out.push(chip(fd.bi.cls === 'bad' ? 'b-bad' : fd.bi.cls === 'warn' ? 'b-warn' : 'b-ok', 'Burning index · ' + Math.round(fd.bi.v) + ' ' + fd.bi.word.toLowerCase(), 'fdCard'));
     var mo = new Date().getMonth();
     out.push(chip('b-info', 'Santa Ana season · ' + ((mo >= 8 || mo <= 3) ? 'in season (Sep–Apr)' : 'off season'), 'refCard'));
     el('heroChips').innerHTML = out.join('');
@@ -1945,13 +2201,20 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
       '<li><b>Wind</b> and <b>Humidity</b> are the forecast for this area for the current hour, not a measurement. The small <b>tick</b> on the wind dial is the gust. The <b>triangle</b> on each dial is the worst value coming in the next 24 hours, so a needle in green with the triangle in red means tonight is the problem. The <b>Station check</b> line is a real reading. With a Synoptic token it comes from the Beverly Hills RAWS (a fire-weather station at about 1,260 ft above Coldwater) or the nearest utility station; otherwise from the nearest NWS station, which is often an airport miles away and lower down. Its distance, elevation and age are shown in brackets.</li>' +
       '<li><b>Daylight</b> runs from sunrise to sunset. The last hour turns yellow. After dark, do not count on aircraft.</li>' +
       '<li><b>Chips</b> under the dials are quick all-clears. Tap one to jump to the details.</li>' +
-      '<li>The City\'s third trigger, a burning index of 151 or more, is not in any free live feed, so it is not on this page.</li></ul>' },
+      '<li>The City\'s third trigger, a burning index of 151 or more, is shown in the Fire danger card when a FEMS station is set. It is not counted in the watch out dial yet.</li></ul>' },
     deployCard: { t: 'Guidelines — planning model', h:
       '<p>The sliders pick a planning tier from a planning estimate built on the SOC\'s staffing and tasking figures. It is not an SOC or department figure, and it is a guideline, not an assignment. On open, and whenever the page refreshes, they are set from the <b>worst forecast hour in the next 24 hours</b> for the selected area, so the answer is what to plan for, not just what it is right now. Move a slider to try other conditions; press <b>Use live forecast</b> to go back.</p><ul>' +
       '<li><b>Tier 1</b>: the ordinary-day first alarm, about 75 people with LAFD auto-aid.</li><li><b>Tier 2</b>: the wind-driven Santa Ana model, about 40–50 engines and 250–320 fire personnel. It is a triage and patrol force, not one engine per house.</li>' +
       '<li>Time of day is set to night when the worst hour falls after sunset. Ignition side stays where you put it.</li><li>Nothing is sent anywhere; this is local math.</li></ul>' },
+    fdCard: { t: 'Fire danger', h:
+      '<p>Four reads on how a fire would behave, none of them counted in the watch out dial.</p><ul>' +
+      '<li><b>Burning index (BI)</b> is the National Fire Danger Rating System number for how hard a head fire would be to control. It combines spread (driven by wind) and energy release (driven by how dry all the fuels are). <b>BI ÷ 10 is roughly the flame length in feet</b> at the head of the fire. It comes from one FEMS station and fuel model, set at the bottom of the card. The colored scale uses LAFD\'s published staffing bands (Low 0–37, Moderate 38–47, High 48–110, Very High 111–161, Extreme 162+) and the tick marks the City\'s 151 trigger. FEMS runs the newer NFDRS version, so compare with LAFD\'s daily sheet loosely, not number for number. The small chart is the daily high for the last two weeks.</li>' +
+      '<li><b>ERC</b> (energy release component) tracks the slow seasonal drying and ignores wind. A high ERC with light wind means the fuels are ready and the next wind event will hit hard.</li>' +
+      '<li><b>10-hour fuel (observed)</b> is the fuel moisture stick at the nearest station that has one, often the Beverly Hills RAWS. Under 6% is critically dry.</li>' +
+      '<li><b>Probability of ignition</b> is estimated here from the forecast temperature, humidity and cloud cover, using the standard fine dead fuel moisture and ignition formulas. It is the chance a firebrand landing in fine fuel starts a fire, so it is a spotting and ember watch out. In a Santa Ana it sits near 80–100% for hours; it is more useful for seeing when moisture recovers overnight.</li>' +
+      '<li><b>Crew heat</b> is the NWS heat index from the forecast. It assumes shade and light clothing; full PPE and hillside work add a lot more load. Caution from 80°, high from 90°.</li></ul>' },
     timelineCard: { t: 'Next 24 hours', h:
-      '<p>Hour by hour for the selected area: wind direction, wind, gusts, humidity and temperature, from the National Weather Service forecast grid. <b>Red</b> columns meet the City\'s Red Flag triggers; <b>orange</b> columns are elevated. The top line tells you when the bad window starts and ends. On a phone, swipe sideways. Arrows point the way the wind is blowing; the letters say where it comes from.</p>' },
+      '<p>Hour by hour for the selected area: wind direction, wind, gusts, humidity, temperature and an estimated probability of ignition, from the National Weather Service forecast grid. <b>Red</b> columns meet the City\'s Red Flag triggers; <b>orange</b> columns are elevated. The top line tells you when the bad window starts and ends. On a phone, swipe sideways. Arrows point the way the wind is blowing; the letters say where it comes from.</p>' },
     mapCard: { t: 'Map', h:
       '<ul><li><b>Layers</b> (top right): satellite with street names, USGS topo for slope and drainages, or streets. Overlays switch on and off there too.</li>' +
       '<li><b>Orange lines</b> are fire roads and unpaved tracks from OpenStreetMap, built into the page so they draw with no signal. Tap one for its name.</li>' +
@@ -2023,6 +2286,10 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     if (pg || lr) L.push('Next 24 h: ' + (pg ? 'peak gust ' + pg.gust + ' mph ' + fmtDayHour(pg.t) : '') + (pg && lr ? '; ' : '') + (lr ? 'lowest humidity ' + lr.rh + '% ' + fmtDayHour(lr.t) : ''));
     if (state.hours) L.push('Window: ' + el('tlSummary').textContent);
     if (o) L.push('Observed (' + (o.name || o.id) + (o.src === 'syn' ? ', Synoptic' : '') + (o.ageMin != null ? ', ' + fmtAge(o.ageMin) : '') + '): humidity ' + (o.rh == null ? '—' : o.rh + '%') + ', wind ' + (o.wind == null ? '—' : (o.dir != null ? degToCompass(o.dir) + ' ' : '') + o.wind + ' mph') + (o.gust != null ? ' gust ' + o.gust : '') + (o.temp != null ? ', ' + o.temp + '°F' : ''));
+    if (fd.bi) L.push('Burning index: ' + Math.round(fd.bi.v) + ' (' + fd.bi.word + ', about ' + (fd.bi.v / 10).toFixed(0) + ' ft flames)' + (fd.erc != null ? ', ERC ' + Math.round(fd.erc) : '') + ' — FEMS ' + fd.station + ', model ' + fd.model + ', ' + fmtDayHour(fd.t));
+    if (fd.stick) L.push('10-hour fuel (observed): ' + fd.stick.v + '% at ' + fd.stick.name);
+    var pk = peakPIG(); if (pk) L.push('Probability of ignition (est.): peak ' + pk.pig + '% ' + fmtDayHour(pk.t));
+    var hx = peakHeat(); if (hx && hx.hi >= HEAT_CAUTION) L.push('Crew heat: heat index peaks ' + hx.hi + '° ' + fmtDayHour(hx.t));
     var s = sunTimes(new Date(), state.watch[0], state.watch[1]);
     if (s.sunset) L.push('Sunset ' + fmtClock(s.sunset) + ', civil dusk ' + (s.dusk ? fmtClock(s.dusk) : '—'));
     var note = (storeGet('tww.notes.' + state.area.key) || '').trim(); if (note) L.push('Notes: ' + note);
@@ -2760,6 +3027,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     setNote('obs', 'Loading station readings…');
     el('zone').textContent = 'reading…';
     var synDone = loadSynoptic(run);
+    loadFuelStick(run);
     var a = fetchJSON('https://api.weather.gov/alerts/active?point=' + point, NWS_HEADERS)
       .then(function (j) { if (run !== weatherRun) return; renderAlerts(j); })
       .catch(function (e) { quiet(e); if (run === weatherRun) { feedFail('alerts'); weatherFail('alerts'); } });
@@ -2812,6 +3080,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
     el('updated').textContent = 'Updated ' + fmtClock(new Date());
     setNote('status', 'Checking live feeds…', 'small muted');
     var w = loadWeather();
+    loadFEMS();
     refreshStart = Date.now();
     if (state.camTimer) refreshCameras();
     refreshFireRoadsLive();
@@ -2870,6 +3139,8 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
   initCollapsibles();
   addHelp();
   buildManual();
+  initFEMSSettings();
+  loadFEMS();
   setArea(AREAS[0].key);              // renders links, notes, stations, cameras, the dials, and starts the weather loaders
   renderCalc();
   try { if (map) drawBakedFireRoads(); } catch (e) { quiet(e); }
