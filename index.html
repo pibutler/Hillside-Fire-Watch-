@@ -862,8 +862,6 @@ tr.flag{background:var(--flagbg)}
 .cam img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#1e293b}
 .cam .cap{padding:8px 10px;font-size:14px}
 .cam .cap a{text-decoration:none}
-.cam-sub{margin:14px 0 8px;font-size:15px}
-.cam-sub .small{font-weight:400;margin-left:6px}
 .links li{margin:6px 0}
 .linkrow{font-size:14px;margin:4px 0 2px;line-height:1.9}
 .linkrow a{display:inline-block;margin-right:6px;padding:1px 9px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--link);white-space:nowrap}
@@ -1013,13 +1011,10 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
   </section>
 
   <section class="card print-hide" id="camsCard" data-collapse="closed">
-    <h2 id="h2-cams">Cameras — fire and routes <span class="asof" id="asof-cams"></span><span class="src">ALERTCalifornia / UC San Diego · CC BY-NC-ND 4.0 · Caltrans</span></h2>
-    <h3 class="cam-sub">Fire cameras <span class="small muted">mountaintop, for spotting smoke</span></h3>
+    <h2 id="h2-cams">Fire cameras <span class="asof" id="asof-cams"></span><span class="src">ALERTCalifornia / UC San Diego · CC BY-NC-ND 4.0</span></h2>
     <div id="cams" class="cams"></div>
     <p class="small"><a href="https://cameras.alertcalifornia.org/" target="_blank" rel="noopener">All ALERTCalifornia cameras</a></p>
-    <h3 class="cam-sub">Route cameras <span class="small muted">I-405 Sepulveda Pass, access and evacuation. Traffic cameras point at the road, not the ridges.</span></h3>
-    <div id="rcams" class="cams"><div class="note">Opens with this card.</div></div>
-    <p class="small"><a href="https://quickmap.dot.ca.gov/" target="_blank" rel="noopener">All Caltrans cameras (QuickMap)</a> · <a href="https://sunsettrafficjamcam.com/" target="_blank" rel="noopener">Sunset &amp; Bundy cameras</a> <span class="muted">(private site, western approach)</span></p>
+    <p class="small">Traffic cameras: <a href="https://quickmap.dot.ca.gov/" target="_blank" rel="noopener">Caltrans QuickMap</a> (turn on Cameras, zoom to the Sepulveda Pass) · <a href="https://sunsettrafficjamcam.com/" target="_blank" rel="noopener">Sunset &amp; Bundy cameras</a> <span class="muted">(private site)</span></p>
   </section>
 
   <section class="card" id="stationsCard" data-collapse="closed">
@@ -1123,7 +1118,7 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
   <div class="disc">
     <p class="disc-lead"><b>Not an official document.</b> Hillside Fire Watch is an unofficial, informational tool for situational awareness only. It is not issued, reviewed, approved or endorsed by any city, fire department or government agency, and it does not state the policy or position of any of them. It gives guidelines and watch outs; it does not issue warnings, orders, deployments or assignments, and it is not a substitute for official forecasts, fire danger ratings or the judgment of the people on scene. Official watches and warnings come from the National Weather Service. Information may be delayed, incomplete or wrong; verify with official sources before acting. In an emergency, call 911.</p>
     <p>Readings come from public sources. The dials, the watch out level, the fire danger figures and the planning model are rules of thumb and estimates, not official forecasts, ratings or department guidance. Provided as is, without warranty of any kind. Use at your own risk.</p>
-    <p class="small">Data: NOAA/NWS, USDA Forest Service FEMS, Synoptic Data PBC, ALERTCalifornia, Caltrans, OpenStreetMap / Overpass, Esri, USGS, Windy. Fixed facts: published Standards of Cover.</p>
+    <p class="small">Data: NOAA/NWS, USDA Forest Service FEMS, Synoptic Data PBC, ALERTCalifornia, OpenStreetMap / Overpass, Esri, USGS, Windy. Fixed facts: published Standards of Cover.</p>
     <p class="small">Developed as part of independent research on hillside fire weather. Station data courtesy of Synoptic Data PBC.</p>
     <p class="small">Hillside Fire Watch. Developed by PB.</p>
   </div>
@@ -2233,8 +2228,8 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
       '<li><b>Orange lines</b> are fire roads and unpaved tracks from OpenStreetMap, built into the page so they draw with no signal. Tap one for its name.</li>' +
       '<li><b>Shaded areas</b> are the SOC high-risk areas, traced for orientation, not survey lines. <b>Red lines</b> are the Map 23 evacuation streets. <b>Yellow dots</b> are the SOC simulation ignition points.</li>' +
       '<li>The <b>wind label</b> above the pin is this hour\'s forecast. <b>Tap anywhere</b> for a spot forecast and the closest station. <b>Measure</b> gives a straight-line distance with rough travel times.</li></ul>' },
-    camsCard: { t: 'Cameras', h:
-      '<p><b>Route cameras</b> are Caltrans traffic cameras on the I-405 through the Sepulveda Pass (Bel Air Crest, north of Sunset, Waterford), pulled from Caltrans\'s published camera list. They point at the road, so use them for access and evacuation traffic and for a second look at smoke over the ridge, not for spotting new fires. Caltrans updates the stills every few minutes; some cameras also offer live video. Sunset &amp; Bundy is a private site, linked only.</p><p><b>Fire cameras:</b> latest frames from ALERTCalifornia mountaintop cameras, nearest first. Frames refresh every minute while this card is open and stop when it is closed. Tap a frame for the live camera with pan and history. Use them to confirm a smoke report.</p>' },
+    camsCard: { t: 'Fire cameras', h:
+      '<p>Latest frames from ALERTCalifornia mountaintop cameras, nearest first. Frames refresh every minute while this card is open and stop when it is closed. Tap a frame for the live camera with pan and history. Use them to confirm a smoke report.</p>' },
     stationsCard: { t: 'Nearest fire stations', h:
       '<p>Straight-line distance and direction from the selected area to BHFD and nearby LAFD stations. The drive time is distance ÷ 20 mph, a rough stand-in for canyon roads, not real routing and not a first-due assignment. Confirm dispatch through CAD.</p>' },
     obsCard: { t: 'Observed weather', h:
@@ -2598,7 +2593,6 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
         '<div class="cap"><a href="' + esc(CAMERA_BASE + '?id=' + encodeURIComponent(c.id)) + '" target="_blank" rel="noopener"><strong>' + esc(c.name) + '</strong></a><div class="small">' + esc(c.id) + ' · ' + esc(x.d.toFixed(1)) + ' mi ' + esc(bearingWord(from[0], from[1], c.lat, c.lon)) + ' of ' + esc(fromName) + ' · <span class="camstat">loading…</span></div></div></div>';
     });
     el('cams').innerHTML = html;
-    if (rcams) renderRouteCams();
     var imgs = document.querySelectorAll('img[data-cam]');
     for (var i = 0; i < imgs.length; i++) {
       (function (img) {
@@ -2610,63 +2604,6 @@ footer{padding:20px 16px 28px;padding-bottom:calc(28px + env(safe-area-inset-bot
   function refreshCameras() {
     var imgs = document.querySelectorAll('img[data-cam]');
     for (var i = 0; i < imgs.length; i++) imgs[i].src = NONET ? 'data:image/gif;base64,R0lGODlhAQABAAAAACw=' : camFrameUrl(imgs[i].getAttribute('data-cam'));
-    refreshRouteCams();
-  }
-  // ---------- Caltrans route cameras (official CCTV list; stills refresh every few minutes) ----------
-  var CT_CCTV = 'https://gisdata.dot.ca.gov/arcgis/rest/services/CHhighway/CCTV/FeatureServer/0/query';
-  var CT_BOX = [-118.51, 34.05, -118.44, 34.17];   // Sepulveda Pass, Getty Center to Mulholland
-  var RCAM_WANT = [
-    { re: /bel\s*-?\s*air\s*crest/i, label: 'I-405 at Bel Air Crest' },
-    { re: /n(orth|o\.?)?\s*of\s*sunset/i, label: 'I-405 north of Sunset' },
-    { re: /waterford/i, label: 'I-405 at Waterford St' }
-  ];
-  var rcams = null, rcamsLoading = false;
-  function rcamUrl(u) { return u + (u.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now(); }
-  function loadRouteCams() {
-    if (rcamsLoading) return; rcamsLoading = true;
-    var box = el('rcams');
-    var q = 'where=' + encodeURIComponent('district=7') + '&geometry=' + CT_BOX.join(',') + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects' +
-      '&outFields=' + encodeURIComponent('locationName,nearbyPlace,latitude,longitude,direction,route,inService,currentImageURL,streamingVideoURL,currentImageUpdateFrequency') + '&returnGeometry=false&f=json';
-    fetchJSON(CT_CCTV + '?' + q).then(function (j) {
-      var all = ((j && j.features) || []).map(function (f) { return f.attributes || {}; }).filter(function (a) { return a.currentImageURL && /405/.test(String(a.route || '') + ' ' + a.locationName); });
-      var picked = [];
-      RCAM_WANT.forEach(function (w) {
-        var m = all.filter(function (a) { return w.re.test((a.locationName || '') + ' ' + (a.nearbyPlace || '')); })[0];
-        if (m && picked.indexOf(m) < 0) { m._label = w.label; picked.push(m); }
-      });
-      if (!picked.length) picked = all.sort(function (a, b) { return (b.latitude || 0) - (a.latitude || 0); }).slice(0, 3);
-      if (!picked.length) throw new Error('no Caltrans cameras matched');
-      rcams = picked; renderRouteCams();
-    }).catch(function (e) {
-      quiet(e);
-      box.innerHTML = '<div class="note">Caltrans camera list did not answer from this browser. Open the <a href="https://quickmap.dot.ca.gov/" target="_blank" rel="noopener">QuickMap cameras</a> and zoom to the Sepulveda Pass (Bel Air Crest, north of Sunset, Waterford).</div>';
-    }).then(function () { rcamsLoading = false; });
-  }
-  function renderRouteCams() {
-    var from = state.watch, fromName = shortName(state.area), html = '';
-    rcams.forEach(function (c, i) {
-      var name = c._label || c.locationName || 'Caltrans camera';
-      var d = (c.latitude && c.longitude) ? haversineMi(from[0], from[1], +c.latitude, +c.longitude) : null;
-      var live = c.streamingVideoURL && /^https:/i.test(c.streamingVideoURL) ? ' · <a href="' + esc(c.streamingVideoURL) + '" target="_blank" rel="noopener">live video' + (/\.m3u8/i.test(c.streamingVideoURL) ? ' (Safari / iPhone)' : '') + '</a>' : '';
-      var off = String(c.inService).toLowerCase() === 'false';
-      html += '<div class="cam"><a href="' + esc(c.currentImageURL) + '" target="_blank" rel="noopener"><img alt="' + esc(name) + ' latest image" loading="lazy" data-rcam="' + i + '" referrerpolicy="no-referrer"></a>' +
-        '<div class="cap"><strong>' + esc(name) + '</strong><div class="small">' + (c.direction ? 'Facing ' + esc(String(c.direction).toLowerCase()) + ' · ' : '') + (d != null ? esc(d.toFixed(1)) + ' mi ' + esc(bearingWord(from[0], from[1], +c.latitude, +c.longitude)) + ' of ' + esc(fromName) + ' · ' : '') +
-        '<span class="rcamstat"' + (off ? ' data-off="1"' : '') + '>' + (off ? 'Caltrans lists this camera out of service' : 'loading…') + '</span>' + live + '</div></div></div>';
-    });
-    el('rcams').innerHTML = html;
-    var imgs = document.querySelectorAll('img[data-rcam]');
-    for (var k = 0; k < imgs.length; k++) {
-      (function (img) {
-        img.addEventListener('load', function () { var s = img.parentNode.parentNode.querySelector('.rcamstat'); if (s) s.textContent = (s.getAttribute('data-off') ? 'listed out of service; last image ' : 'image ') + fmtClock(new Date()); });
-        img.addEventListener('error', function () { var s = img.parentNode.parentNode.querySelector('.rcamstat'); if (s) s.innerHTML = 'Image unavailable — <a href="https://quickmap.dot.ca.gov/" target="_blank" rel="noopener">open QuickMap</a>'; });
-      })(imgs[k]);
-    }
-    refreshRouteCams();
-  }
-  function refreshRouteCams() {
-    if (!rcams) { loadRouteCams(); return; }
-    var imgs = document.querySelectorAll('img[data-rcam]');
-    for (var k = 0; k < imgs.length; k++) { var c = rcams[+imgs[k].getAttribute('data-rcam')]; if (c) imgs[k].src = NONET ? 'data:image/gif;base64,R0lGODlhAQABAAAAACw=' : rcamUrl(c.currentImageURL); }
   }
   // ---------- Windy wind window ----------
   function windyEmbedUrl(p) {
